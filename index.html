@@ -77,7 +77,7 @@
             cursor: zoom-out;
         }
 
-        /* ==================== WARNING LIGHTS - Updated colors ==================== */
+        /* ==================== WARNING LIGHTS ==================== */
         .warning-lights-top {
             position: absolute;
             top: 10px;
@@ -110,7 +110,7 @@
             transition: all 0.3s ease;
         }
 
-        /* Amber warnings (Check Oil, Check Engine) */
+        /* Amber warnings (Check Oil, Check Engine) - SOLID, no animation */
         .warning-light.amber.active {
             color: #cc8800;
             opacity: 1;
@@ -120,21 +120,6 @@
             background: #ffaa00;
             border-color: #cc8800;
             box-shadow: 0 0 10px rgba(255, 170, 0, 0.8);
-            animation: lightPulseAmber 0.8s infinite;
-        }
-
-        .warning-light.amber.intermittent .indicator {
-            animation: intermittentFlash 0.3s infinite;
-        }
-
-        @keyframes lightPulseAmber {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        @keyframes intermittentFlash {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.2; }
         }
 
         /* Red warnings (Oil Pressure) */
@@ -422,8 +407,8 @@
 
         .hud-meter-bar.lubrication { background: #000; }
         .hud-meter-bar.lubrication.critical { background: #cc0000; }
-        .hud-meter-bar.heat { background: #000; }
-        .hud-meter-bar.heat.critical { background: #cc0000; }
+        .hud-meter-bar.friction { background: #000; }
+        .hud-meter-bar.friction.critical { background: #cc0000; }
         .hud-meter-bar.warping { background: #000; }
         .hud-meter-bar.warping.critical { background: #cc0000; }
 
@@ -494,15 +479,6 @@
             color: #cc0000;
         }
 
-        /* Nominal stage stays gray always */
-        .stage-item[data-stage="0"] .stage-name {
-            color: #999;
-        }
-
-        .stage-item[data-stage="0"].current .stage-name {
-            color: #666;
-        }
-
         .stage-arrow {
             position: absolute;
             top: -12px;
@@ -510,7 +486,6 @@
             font-weight: 900;
             color: #000;
             z-index: 100;
-            /* White outline */
             text-shadow: 
                 -1px -1px 0 #fff,
                 1px -1px 0 #fff,
@@ -818,7 +793,7 @@
             background: #fff;
             border: 2px solid #000;
             border-radius: 8px;
-            padding: 10px 16px; /* Increased left/right padding */
+            padding: 10px 16px;
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
             position: relative;
             overflow: hidden;
@@ -1059,7 +1034,7 @@
         <div class="engine-canvas-wrapper" id="engineWrapper">
             <canvas id="engineCanvas"></canvas>
             
-            <!-- Updated Warning Lights with 3 indicators -->
+            <!-- Warning Lights -->
             <div class="warning-lights-top">
                 <div class="warning-light amber" id="checkOilLight">
                     <span class="indicator"></span>
@@ -1110,15 +1085,15 @@
                             </div>
                         </div>
                     </div>
-                    <div class="hud-meter" id="heatMeterContainer" data-info="heat">
+                    <div class="hud-meter" id="frictionMeterContainer" data-info="friction">
                         <div class="hud-meter-warning"><span class="hud-meter-warning-icon">⚠</span></div>
                         <div class="hud-meter-content">
                             <div class="hud-meter-header">
-                                <span class="hud-meter-label">Heat</span>
-                                <span class="hud-meter-value" id="heatValue">0%</span>
+                                <span class="hud-meter-label">Friction</span>
+                                <span class="hud-meter-value" id="frictionValue">0%</span>
                             </div>
                             <div class="hud-meter-bar-container">
-                                <div class="hud-meter-bar heat" id="heatMeter" style="width: 0%"></div>
+                                <div class="hud-meter-bar friction" id="frictionMeter" style="width: 0%"></div>
                             </div>
                         </div>
                     </div>
@@ -1153,7 +1128,7 @@
             </div>
         </div>
         
-        <!-- Stage Progress Bar - No click handlers -->
+        <!-- Stage Progress Bar -->
         <div class="stage-progress-container" id="stageProgressContainer">
             <div class="stage-progress-label">Damage Progression</div>
             <div class="stage-progress-bar" id="stageProgressBar">
@@ -1275,7 +1250,7 @@
         
         // ==================== ENGINE STATE ====================
         const engine = {
-            oilLevel: 100, lubrication: 100, heat: 0, warping: 0,
+            oilLevel: 100, lubrication: 100, friction: 0, warping: 0,
             damageStage: 0, maxReachedStage: 0, rpm: 3000, crankAngle: 0,
             isRunning: true, countdownActive: false, countdownValue: 3,
             countdownTimer: null, damagePopupVisible: false, infoPopupVisible: false,
@@ -1292,12 +1267,12 @@
         
         const warpIncrements = [0, 5, 10, 18, 30, 50];
         const damageEffects = [
-            { lubeLossMult: 1.0, heatMult: 1.0 },
-            { lubeLossMult: 1.3, heatMult: 1.3 },
-            { lubeLossMult: 1.6, heatMult: 1.6 },
-            { lubeLossMult: 2.0, heatMult: 2.0 },
-            { lubeLossMult: 2.5, heatMult: 2.5 },
-            { lubeLossMult: 3.0, heatMult: 3.0 }
+            { lubeLossMult: 1.0, frictionMult: 1.0 },
+            { lubeLossMult: 1.3, frictionMult: 1.3 },
+            { lubeLossMult: 1.6, frictionMult: 1.6 },
+            { lubeLossMult: 2.0, frictionMult: 2.0 },
+            { lubeLossMult: 2.5, frictionMult: 2.5 },
+            { lubeLossMult: 3.0, frictionMult: 3.0 }
         ];
         
         const stageProblems = [
@@ -1319,7 +1294,7 @@
         const damageDescriptions = [
             "",
             "<b>Surface wear</b> has formed on cylinder walls from excessive friction. You'll notice <b>reduced RPM capacity</b> and the engine will have a harder time maintaining lubrication.",
-            "<b>Main bearings are damaged</b> from heat stress. Friction is now <b>significantly higher</b>, making it harder for oil to properly lubricate moving parts.",
+            "<b>Main bearings are damaged</b> from friction stress. Friction is now <b>significantly higher</b>, making it harder for oil to properly lubricate moving parts.",
             "<b>Deep scoring marks</b> have formed on cylinder walls from metal-to-metal contact. <b>Permanent metal warping</b> has begun.",
             "<b>Severe internal damage</b> throughout the engine. Connecting rods and crankshaft bearings are <b>compromised</b>.",
             "The engine has <b>completely seized</b>. Pistons have welded to cylinder walls. The engine <b>cannot be repaired</b>."
@@ -1334,11 +1309,12 @@
             { name: "SEIZED", description: "6: Failed", color: "stage-5" }
         ];
         
+        // Updated info content with more informative descriptions
         const infoContent = {
             rpm: { title: "RPM Meter", description: "<b>RPM</b> shows crankshaft speed. Damage reduces max RPM." },
-            lube: { title: "Lubrication", description: "<b>Lubrication</b> shows oil coating. Below <b>10% oil</b>, pump sucks air." },
-            heat: { title: "Heat Meter", description: "<b>Heat</b> builds when lube drops below <b>50%</b>. At <b>90%</b>, countdown begins." },
-            warp: { title: "Metal Warping", description: "<b>Warping</b> is permanent damage. Causes piston misalignment." },
+            lube: { title: "Lubrication", description: "<b>Lubrication</b> measures how well oil is coating the pistons and cylinder walls. When lubrication is high, the pistons glide smoothly without creating damaging friction. Low lubrication means metal-on-metal contact, which rapidly damages your engine." },
+            friction: { title: "Friction", description: "<b>Friction</b> shows the wear and heat building up on the pistons from inadequate lubrication. High friction causes the metal components to heat up and expand, leading to warping and permanent damage. This is not engine coolant temperature—it's localized heat from piston-to-cylinder contact." },
+            warp: { title: "Metal Warping", description: "<b>Metal Warping</b> indicates permanent physical deformation of pistons and cylinders caused by excessive friction heat. Warped components no longer fit together properly, causing misalignment, reduced efficiency, and eventually complete engine seizure. This damage cannot be reversed." },
             status: { title: "Engine Status", description: "Shows damage stage from <b>1 (Perfect)</b> to <b>6 (Seized)</b>." },
             problems: { title: "Problems", description: "Lists active issues: RPM loss, friction, warping." },
             condition: { title: "Condition", description: "Summary of engine health and operational status." }
@@ -1356,9 +1332,9 @@
         const lubMeter = document.getElementById('lubMeter');
         const lubValue = document.getElementById('lubValue');
         const lubMeterContainer = document.getElementById('lubMeterContainer');
-        const heatMeter = document.getElementById('heatMeter');
-        const heatValue = document.getElementById('heatValue');
-        const heatMeterContainer = document.getElementById('heatMeterContainer');
+        const frictionMeter = document.getElementById('frictionMeter');
+        const frictionValue = document.getElementById('frictionValue');
+        const frictionMeterContainer = document.getElementById('frictionMeterContainer');
         const warpMeter = document.getElementById('warpMeter');
         const warpValue = document.getElementById('warpValue');
         const warpMeterContainer = document.getElementById('warpMeterContainer');
@@ -1401,9 +1377,14 @@
                         item.classList.add('damaged');
                     }
                 }
-                // Completed/past stages (red X)
-                else if (i < engine.damageStage && i > 0) {
-                    item.classList.add('damaged');
+                // Completed/past stages get damaged class (including Nominal when at stage 2+)
+                else if (i < engine.damageStage) {
+                    // Nominal (index 0) gets X when at stage 2 (index 1) or beyond
+                    if (i === 0 && engine.damageStage >= 2) {
+                        item.classList.add('damaged');
+                    } else if (i > 0) {
+                        item.classList.add('damaged');
+                    }
                 }
             });
             
@@ -1459,7 +1440,7 @@
                 engine.graceActive = true;
                 setTimeout(() => {
                     engine.graceActive = false;
-                    if (engine.heat > 90 && engine.damageStage < 5 && !engine.countdownActive) startCountdown();
+                    if (engine.friction > 90 && engine.damageStage < 5 && !engine.countdownActive) startCountdown();
                 }, 2000);
             } else if (engine.infoPopupVisible) {
                 engine.infoPopupVisible = false;
@@ -1518,7 +1499,7 @@
         
         const tutorialSteps = [
             { target: 'oilSection', position: 'above', text: '<b>Drag this slider</b> to control the <b>oil level</b>. Low oil causes engine damage!' },
-            { target: 'hudRightPanel', position: 'left', text: 'Monitor <b>engine stats</b>: <b>RPM</b>, <b>lubrication</b>, <b>heat</b>, and <b>warping</b>.' },
+            { target: 'hudRightPanel', position: 'left', text: 'Monitor <b>engine stats</b>: <b>RPM</b>, <b>lubrication</b>, <b>friction</b>, and <b>warping</b>.' },
             { target: 'stageProgressContainer', position: 'above', text: '<b>Your goal:</b> Experience all <b>6 damage stages</b> by letting the engine overheat!' },
             { target: 'buttonsContainer', position: 'above', text: 'Use <b>Refill</b> to add oil, or <b>Reset</b> to restore the engine.' }
         ];
@@ -1759,16 +1740,16 @@
                 ctx.translate(this.x, this.y);
                 ctx.rotate((this.angle * Math.PI) / 180);
                 const damageShake = engineState.damageStage > 2 ? (Math.random() - 0.5) * engineState.damageStage * 1.5 : 0;
-                const heatLevel = engineState.heat, lubeLevel = engineState.lubrication, damageLevel = engineState.damageStage;
+                const frictionLevel = engineState.friction, lubeLevel = engineState.lubrication, damageLevel = engineState.damageStage;
                 let strokeColor = '#000', fillColor = '#fff', pistonFillColor = '#fff';
-                if (heatLevel > 70) pistonFillColor = `rgb(255, ${Math.floor(255 - (heatLevel - 70) / 30 * 200)}, ${Math.floor(255 - (heatLevel - 70) / 30 * 200)})`;
+                if (frictionLevel > 70) pistonFillColor = `rgb(255, ${Math.floor(255 - (frictionLevel - 70) / 30 * 200)}, ${Math.floor(255 - (frictionLevel - 70) / 30 * 200)})`;
                 if (damageLevel >= 4) { strokeColor = '#880000'; fillColor = '#ffeeee'; }
                 else if (damageLevel >= 2) { strokeColor = '#aa0000'; fillColor = '#fff8f8'; }
                 
                 ctx.strokeStyle = strokeColor; ctx.fillStyle = fillColor; ctx.lineWidth = 2;
                 ctx.beginPath(); ctx.rect(-30 + damageShake, -90, 60, 130); ctx.fill(); ctx.stroke();
                 ctx.beginPath(); ctx.rect(-35 + damageShake, -105, 70, 20); ctx.fill(); ctx.stroke();
-                ctx.fillStyle = heatLevel > 60 ? '#fff0f0' : '#f5f5f5';
+                ctx.fillStyle = frictionLevel > 60 ? '#fff0f0' : '#f5f5f5';
                 ctx.beginPath(); ctx.rect(-25 + damageShake, -85, 50, 15); ctx.fill(); ctx.stroke();
                 ctx.fillStyle = fillColor;
                 ctx.beginPath(); ctx.rect(-20 + damageShake, -100 + this.intakeValveOpen, 6, 20); ctx.fill(); ctx.stroke();
@@ -1799,9 +1780,9 @@
                 ctx.lineWidth = 6; ctx.strokeStyle = strokeColor;
                 ctx.beginPath(); ctx.moveTo(damageShake, pistonY + 22); ctx.lineTo(damageShake, 68); ctx.stroke();
                 
-                if (heatLevel > 60) {
+                if (frictionLevel > 60) {
                     const pistonMoving = Math.abs(this.pistonPos - this.prevPistonPos) > 0.5;
-                    const intensity = (heatLevel - 60) / 40;
+                    const intensity = (frictionLevel - 60) / 40;
                     if (pistonMoving) {
                         for (let s = 0; s < 10; s++) {
                             if (Math.random() < intensity * 0.8) {
@@ -1943,7 +1924,7 @@
             const pickupScreenY = pickupBottomY - 8;
             engine.pumpSuckingAir = pickupScreenY < oilSurfaceY;
             
-            // Pickup tube with animated flow (UPWARD direction) or gray when not flowing
+            // Pickup tube with animated UPWARD flow or gray when not flowing
             if (isFlowing) {
                 drawAnimatedPickupTube(ctx, pickupX, pumpY + pumpHeight, pickupBottomY - 15, pickupWidth, flowAlpha);
             } else {
@@ -1980,28 +1961,29 @@
             ctx.fillText('OIL', pumpX + pumpWidth/2, pumpY + 14);
             ctx.fillText('PUMP', pumpX + pumpWidth/2, pumpY + 24);
             
-            // "SUCKING AIR" warning text - only when oil < 10%
-            if (isLow && engine.isRunning) {
+            // "SUCKING AIR" warning text - appears at 15% oil level, all on one line
+            if (oilLevel < 15 && engine.isRunning) {
                 if (engine.suckingAirFlashOn) {
                     ctx.fillStyle = '#cc0000';
-                    ctx.font = 'bold 9px Helvetica';
+                    ctx.font = 'bold 8px Helvetica';
                     ctx.textAlign = 'left';
-                    ctx.fillText('SUCKING', pickupX + 22, pickupBottomY - 25);
-                    ctx.fillText('AIR', pickupX + 22, pickupBottomY - 14);
+                    ctx.fillText('SUCKING AIR', pickupX + 20, pickupBottomY - 18);
                 }
             }
             
-            // Air bubbles only when oil >= 10% (some oil still being drawn but about to run out)
-            // When < 10%, no bubbles - just nothing coming through
-            if (engine.pumpSuckingAir && engine.isRunning && oilLevel >= 10 && Math.random() < 0.4) {
-                oilSystem.airBubbles.push(new AirBubble(pickupX, pickupBottomY - 20));
+            // Air bubbles - linear rate from 25% (few) to 10% (many)
+            // No bubbles below 10%
+            if (engine.pumpSuckingAir && engine.isRunning && oilLevel >= 10 && oilLevel <= 25) {
+                // Linear interpolation: at 25% -> 0.05 chance, at 10% -> 0.5 chance
+                const bubbleRate = 0.05 + (25 - oilLevel) / 15 * 0.45;
+                if (Math.random() < bubbleRate) {
+                    oilSystem.airBubbles.push(new AirBubble(pickupX, pickupBottomY - 20));
+                }
             }
         }
         
         function drawAnimatedPickupTube(ctx, x, topY, bottomY, width, alpha) {
             const segmentLength = 20;
-            // Reverse offset for upward flow
-            const offset = (30 - (engine.galleryFlowOffset % 30));
             
             // Base tube
             ctx.strokeStyle = `rgba(60, 60, 60, ${alpha})`;
@@ -2012,17 +1994,21 @@
             ctx.lineTo(x, bottomY);
             ctx.stroke();
             
-            // Animated flow (UPWARD direction - pulses move from bottom to top)
+            // Animated flow UPWARD - offset increases over time, pulses move from bottom to top
             const tubeLength = bottomY - topY;
-            for (let d = (offset % segmentLength); d < tubeLength; d += segmentLength) {
-                const py = bottomY - d; // Start from bottom, go up
+            const animOffset = engine.galleryFlowOffset;
+            
+            // Draw pulses moving upward
+            for (let d = animOffset % segmentLength; d < tubeLength; d += segmentLength) {
+                // d=0 is at top, so we draw at bottomY - d to place from bottom going up
+                const py = bottomY - d;
                 ctx.fillStyle = `rgba(30, 30, 30, ${alpha * 0.8})`;
                 ctx.beginPath();
                 ctx.arc(x, py, width * 0.4, 0, Math.PI * 2);
                 ctx.fill();
             }
             
-            // Upward arrow
+            // Upward arrow at midpoint
             const midY = (topY + bottomY) / 2;
             ctx.save();
             ctx.translate(x, midY);
@@ -2140,7 +2126,7 @@
         function updateEngine() {
             if (engine.damageStage >= 5) {
                 engine.isRunning = false; engine.rpm = 0;
-                engine.lubrication = 0; engine.heat = 0;
+                engine.lubrication = 0; engine.friction = 0;
             }
             engine.rpmReductionPercent = engine.damageStage >= 5 ? 100 : Math.round((engine.damageStage * 400) / 3000 * 100);
             if (engine.isRunning) {
@@ -2157,43 +2143,39 @@
                 engine.lubrication = Math.max(0, engine.lubrication - ((20 + factor * 13.3) / 60) * effects.lubeLossMult);
             }
             
+            // Friction builds when lubrication is low
             if (engine.lubrication < 50) {
                 const factor = (50 - engine.lubrication) / 50;
-                engine.heat = Math.min(100, engine.heat + ((1 + factor * 32) / 60) * effects.heatMult * (1 + engine.rpm / 3000 * engine.damageStage * 0.1));
+                engine.friction = Math.min(100, engine.friction + ((1 + factor * 32) / 60) * effects.frictionMult * (1 + engine.rpm / 3000 * engine.damageStage * 0.1));
             } else {
-                engine.heat = Math.max(0, engine.heat - engine.heat * (engine.oilLevel >= 50 ? 0.04 : engine.oilLevel >= 10 ? 0.025 : 0.01));
+                engine.friction = Math.max(0, engine.friction - engine.friction * (engine.oilLevel >= 50 ? 0.04 : engine.oilLevel >= 10 ? 0.025 : 0.01));
             }
             
             if (engine.isRunning) {
-                const targetRPM = 3000 - engine.damageStage * 400 - (engine.heat > 80 ? 500 : 0);
+                const targetRPM = 3000 - engine.damageStage * 400 - (engine.friction > 80 ? 500 : 0);
                 engine.rpm = Math.max(0, engine.rpm + (targetRPM - engine.rpm) * 0.05);
             }
             
-            if (engine.heat > 90 && engine.damageStage < 5 && !engine.countdownActive && !engine.damagePopupVisible && !engine.infoPopupVisible && !engine.graceActive) {
+            if (engine.friction > 90 && engine.damageStage < 5 && !engine.countdownActive && !engine.damagePopupVisible && !engine.infoPopupVisible && !engine.graceActive) {
                 if (idleHintActive) hideIdleHint();
                 startCountdown();
             }
-            if (engine.countdownActive && engine.heat < 80) cancelCountdown(true);
+            if (engine.countdownActive && engine.friction < 80) cancelCountdown(true);
             updateUI();
         }
         
         function updateUI() {
             const isSeized = engine.damageStage >= 5, isOilCrit = engine.oilLevel < 10;
-            const isLubLow = engine.lubrication < 30, isHeatHigh = engine.heat > 60, isWarpHigh = engine.warping > 30;
+            const isLubLow = engine.lubrication < 30, isFrictionHigh = engine.friction > 60, isWarpHigh = engine.warping > 30;
             
-            // Check Oil (amber) - below 25%
+            // Check Oil (amber, solid) - below 25%
             checkOilLight.classList.toggle('active', engine.oilLevel < 25);
             
             // Oil Pressure (red) - below 10%
             oilPressureLight.classList.toggle('active', engine.oilLevel < 10);
             
-            // Check Engine (amber) - Stage 2 intermittent, Stage 3+ solid
-            checkEngineLight.classList.remove('active', 'intermittent');
-            if (engine.damageStage >= 3) {
-                checkEngineLight.classList.add('active');
-            } else if (engine.damageStage === 2 || engine.damageStage === 1) {
-                checkEngineLight.classList.add('active', 'intermittent');
-            }
+            // Check Engine (amber, solid) - Stage 2 and beyond
+            checkEngineLight.classList.toggle('active', engine.damageStage >= 2);
             
             oilSliderFill.style.width = engine.oilLevel + '%';
             oilSliderBall.style.left = engine.oilLevel + '%';
@@ -2205,18 +2187,18 @@
             oilWarningIcon.style.display = isOilCrit ? 'inline' : 'none';
             refillOilOverlay.classList.toggle('active', engine.countdownActive);
             
-            const dLube = isSeized ? 0 : engine.lubrication, dHeat = isSeized ? 0 : engine.heat;
+            const dLube = isSeized ? 0 : engine.lubrication, dFriction = isSeized ? 0 : engine.friction;
             lubMeter.style.width = dLube + '%';
             lubValue.textContent = Math.round(dLube) + '%';
             lubMeter.classList.toggle('critical', isLubLow && !isSeized);
             lubValue.classList.toggle('critical', isLubLow && !isSeized);
             lubMeterContainer.classList.toggle('critical', isLubLow && !isSeized);
             
-            heatMeter.style.width = dHeat + '%';
-            heatValue.textContent = Math.round(dHeat) + '%';
-            heatMeter.classList.toggle('critical', isHeatHigh && !isSeized);
-            heatValue.classList.toggle('critical', isHeatHigh && !isSeized);
-            heatMeterContainer.classList.toggle('critical', isHeatHigh && !isSeized);
+            frictionMeter.style.width = dFriction + '%';
+            frictionValue.textContent = Math.round(dFriction) + '%';
+            frictionMeter.classList.toggle('critical', isFrictionHigh && !isSeized);
+            frictionValue.classList.toggle('critical', isFrictionHigh && !isSeized);
+            frictionMeterContainer.classList.toggle('critical', isFrictionHigh && !isSeized);
             
             warpMeter.style.width = engine.warping + '%';
             warpValue.textContent = Math.round(engine.warping) + '%';
@@ -2339,7 +2321,7 @@
         
         refillBtn.addEventListener('click', () => { engine.oilLevel = 100; resetIdleTimer(); });
         resetBtn.addEventListener('click', () => {
-            engine.oilLevel = 100; engine.lubrication = 100; engine.heat = 0; engine.warping = 0;
+            engine.oilLevel = 100; engine.lubrication = 100; engine.friction = 0; engine.warping = 0;
             engine.damageStage = 0; engine.warpAppliedAtStage = -1; engine.rpm = 3000;
             engine.rpmReductionPercent = 0; engine.isRunning = true; engine.statsFrozen = false;
             engine.damagePopupVisible = false; engine.infoPopupVisible = false; engine.graceActive = false;
