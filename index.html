@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>V6 Engine Lubrication Simulation</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -34,18 +30,10 @@
             border-bottom: 2px solid #000;
         }
 
-        h1 {
-            font-size: clamp(16px, 4vw, 24px);
-            font-weight: 600;
-            letter-spacing: -0.5px;
-        }
+        h1 { font-size: clamp(16px, 4vw, 24px); font-weight: 600; letter-spacing: -0.5px; }
+        .subtitle { color: #666; font-size: clamp(10px, 2.5vw, 13px); margin-top: 3px; }
 
-        .subtitle {
-            color: #666;
-            font-size: clamp(10px, 2.5vw, 13px);
-            margin-top: 3px;
-        }
-
+        /* ==================== ENGINE CANVAS ==================== */
         .engine-canvas-wrapper {
             position: relative;
             background: #fff;
@@ -56,26 +44,18 @@
             touch-action: none;
             min-height: 340px;
         }
-
-        .engine-canvas-wrapper.warning {
-            border-color: #cc0000;
-            box-shadow: 0 0 20px rgba(204, 0, 0, 0.3);
-        }
+        .engine-canvas-wrapper.warning { border-color: #cc0000; box-shadow: 0 0 20px rgba(204, 0, 0, 0.3); }
 
         #engineCanvas {
             display: block;
             width: 100%;
             height: 100%;
             position: absolute;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
             background: #fff;
             cursor: zoom-in;
         }
-
-        #engineCanvas.zoomed {
-            cursor: zoom-out;
-        }
+        #engineCanvas.zoomed { cursor: zoom-out; }
 
         /* ==================== WARNING LIGHTS ==================== */
         .warning-lights-top {
@@ -100,50 +80,25 @@
             opacity: 0.05;
             transition: all 0.3s ease;
         }
-
         .warning-light .indicator {
-            width: 10px;
-            height: 10px;
+            width: 10px; height: 10px;
             border-radius: 50%;
             background: #ddd;
             border: 1px solid #bbb;
             transition: all 0.3s ease;
         }
+        .warning-light.active { opacity: 1; }
+        .warning-light.amber.active { color: #cc8800; }
+        .warning-light.amber.active .indicator { background: #ffaa00; border-color: #cc8800; box-shadow: 0 0 10px rgba(255, 170, 0, 0.8); }
+        .warning-light.red.active { color: #cc0000; }
+        .warning-light.red.active .indicator { background: #cc0000; border-color: #aa0000; box-shadow: 0 0 10px rgba(204, 0, 0, 0.8); /* animation: lightPulse 0.8s infinite; */ }
 
-        /* Amber warnings (Check Oil, Check Engine) - SOLID, no animation */
-        .warning-light.amber.active {
-            color: #cc8800;
-            opacity: 1;
-        }
+        @keyframes lightPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } } /* Available but not used */
 
-        .warning-light.amber.active .indicator {
-            background: #ffaa00;
-            border-color: #cc8800;
-            box-shadow: 0 0 10px rgba(255, 170, 0, 0.8);
-        }
-
-        /* Red warnings (Oil Pressure) */
-        .warning-light.red.active {
-            color: #cc0000;
-            opacity: 1;
-        }
-
-        .warning-light.red.active .indicator {
-            background: #cc0000;
-            border-color: #aa0000;
-            box-shadow: 0 0 10px rgba(204, 0, 0, 0.8);
-            animation: lightPulseRed 0.8s infinite;
-        }
-
-        @keyframes lightPulseRed {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
+        /* ==================== HUD PANELS ==================== */
         .hud-left-panel {
             position: absolute;
-            top: 8px;
-            left: 8px;
+            top: 8px; left: 8px;
             width: clamp(100px, 18vw, 160px);
             z-index: 10;
             display: flex;
@@ -151,20 +106,29 @@
             gap: 6px;
         }
 
-        .hud-status {
+        .hud-right-panel {
+            position: absolute;
+            top: 8px; right: 8px; bottom: 8px;
+            width: clamp(90px, 16vw, 140px);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            z-index: 10;
+        }
+
+        .hud-box {
             background: #fff;
             border: 1px solid #000;
             border-radius: 4px;
             padding: 6px 8px;
-            text-align: center;
             transition: all 0.3s ease;
             cursor: pointer;
         }
+        .hud-box:hover { background: #f8f8f8; }
+        .hud-box.critical { border-color: #cc0000; background: #fff5f5; }
+        .hud-box.critical:hover { background: #fff0f0; }
 
-        .hud-status:hover { background: #f8f8f8; }
-        .hud-status.critical { border-color: #cc0000; background: #fff5f5; }
-
-        .hud-status-label {
+        .hud-label {
             font-size: 7px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -172,46 +136,28 @@
             margin-bottom: 2px;
         }
 
+        .hud-status { text-align: center; }
         .hud-status-stage {
             font-size: 11px;
             font-weight: 700;
-            color: #000;
             text-transform: uppercase;
             letter-spacing: 0.3px;
             transition: color 0.3s ease;
         }
-
         .hud-status-stage.stage-1 { color: #996600; }
         .hud-status-stage.stage-2 { color: #cc4400; }
         .hud-status-stage.stage-3 { color: #cc0000; }
         .hud-status-stage.stage-4 { color: #aa0000; font-weight: 800; }
         .hud-status-stage.stage-5 { color: #880000; animation: criticalPulse 0.5s infinite; }
 
-        @keyframes criticalPulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
+        @keyframes criticalPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-        .hud-status-text {
-            font-size: 8px;
-            color: #666;
-            margin-top: 2px;
-        }
+        .hud-status-text { font-size: 8px; color: #666; margin-top: 2px; }
 
-        .hud-problems {
-            background: #fff;
-            border: 1px solid #cc0000;
-            border-radius: 4px;
-            padding: 6px 8px;
-            display: none;
-            cursor: pointer;
-        }
-
-        .hud-problems:hover { background: #fff8f8; }
+        .hud-problems { display: none; border-color: #cc0000; }
         .hud-problems.visible { display: block; }
-
+        .hud-problems:hover { background: #fff8f8; }
         .hud-problems-list { list-style: none; }
-
         .hud-problems-list li {
             font-size: 8px;
             color: #cc0000;
@@ -220,98 +166,35 @@
             align-items: center;
             gap: 4px;
         }
-
         .hud-problems-list li:last-child { margin-bottom: 0; }
         .problem-x { font-weight: 700; font-size: 9px; }
 
-        .hud-condition {
-            background: #fff;
-            border: 1px solid #000;
-            border-radius: 4px;
-            padding: 6px 8px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
+        .hud-condition-text { font-size: 8px; color: #333; line-height: 1.3; text-align: left; }
+        .hud-box.critical .hud-condition-text { color: #cc0000; }
 
-        .hud-condition:hover { background: #f8f8f8; }
-        .hud-condition.critical { border-color: #cc0000; background: #fff5f5; }
-
-        .hud-condition-text {
-            font-size: 8px;
-            color: #333;
-            line-height: 1.3;
-            text-align: left;
-        }
-
-        .hud-condition.critical .hud-condition-text { color: #cc0000; }
-
-        .hud-right-panel {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            bottom: 8px;
-            width: clamp(90px, 16vw, 140px);
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            z-index: 10;
-        }
-
-        .hud-rpm {
-            background: #fff;
-            border: 1px solid #000;
-            border-radius: 4px;
-            padding: 5px 8px;
-            text-align: center;
-            cursor: pointer;
-        }
-
-        .hud-rpm:hover { background: #f8f8f8; }
-
-        .hud-rpm-label {
-            font-size: 7px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #666;
-        }
-
-        .hud-rpm-value-container {
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            gap: 6px;
-        }
-
+        .hud-rpm { text-align: center; padding: 5px 8px; }
+        .hud-rpm-value-container { display: flex; align-items: flex-start; justify-content: center; gap: 6px; }
         .hud-rpm-value {
             font-size: clamp(14px, 3vw, 20px);
             font-weight: 700;
-            color: #000;
             font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
             line-height: 1.2;
             transition: color 0.3s ease;
         }
-
         .hud-rpm-value.critical { color: #cc0000; }
-
         .hud-rpm-reduction {
             font-size: clamp(8px, 1.5vw, 10px);
             font-weight: 600;
             color: #cc0000;
-            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
-            line-height: 1;
+            font-family: 'SF Mono', monospace;
             margin-top: 3px;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
-
         .hud-rpm-reduction.visible { opacity: 1; }
 
-        .hud-meters {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            flex-grow: 1;
-        }
+        /* ==================== HUD METERS ==================== */
+        .hud-meters { display: flex; flex-direction: column; gap: 5px; flex-grow: 1; }
 
         .hud-meter {
             display: flex;
@@ -319,7 +202,6 @@
             gap: 0;
             cursor: pointer;
         }
-
         .hud-meter:hover .hud-meter-content { background: #f8f8f8; }
         .hud-meter.critical:hover .hud-meter-content { background: #fff0f0; }
 
@@ -333,18 +215,11 @@
             opacity: 0;
             transition: opacity 0.3s ease;
         }
-
-        .hud-meter.critical .hud-meter-warning {
-            opacity: 1;
-            animation: warningFlash 1s infinite;
-        }
-
-        @keyframes warningFlash {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
+        .hud-meter.critical .hud-meter-warning { opacity: 1; animation: warningFlash 1s infinite; }
+        .hud-meter.critical .hud-meter-warning { border: 1px solid #cc0000; border-right: none; }
         .hud-meter-warning-icon { color: #fff; font-size: 10px; font-weight: bold; }
+
+        @keyframes warningFlash { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 
         .hud-meter-content {
             flex: 1;
@@ -352,43 +227,18 @@
             border: 1px solid #000;
             border-radius: 4px;
             padding: 5px 8px;
-            transition: border-color 0.3s ease, background 0.3s ease;
+            transition: all 0.3s ease;
         }
+        .hud-meter.critical .hud-meter-content { border-color: #cc0000; border-left: none; border-radius: 0 4px 4px 0; }
 
-        .hud-meter.critical .hud-meter-content {
-            border-color: #cc0000;
-            border-left: none;
-            border-radius: 0 4px 4px 0;
-        }
-
-        .hud-meter.critical .hud-meter-warning {
-            border: 1px solid #cc0000;
-            border-right: none;
-        }
-
-        .hud-meter-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 3px;
-        }
-
-        .hud-meter-label {
-            font-size: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #666;
-            font-weight: 600;
-        }
-
+        .hud-meter-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+        .hud-meter-label { font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; font-weight: 600; }
         .hud-meter-value {
             font-size: 10px;
             font-weight: 700;
-            color: #000;
-            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-family: 'SF Mono', monospace;
             transition: color 0.3s ease;
         }
-
         .hud-meter-value.critical { color: #cc0000; }
 
         .hud-meter-bar-container {
@@ -398,19 +248,13 @@
             overflow: hidden;
             border: 1px solid #ddd;
         }
-
         .hud-meter-bar {
             height: 100%;
             border-radius: 2px;
+            background: #000;
             transition: width 0.3s ease, background 0.3s ease;
         }
-
-        .hud-meter-bar.lubrication { background: #000; }
-        .hud-meter-bar.lubrication.critical { background: #cc0000; }
-        .hud-meter-bar.friction { background: #000; }
-        .hud-meter-bar.friction.critical { background: #cc0000; }
-        .hud-meter-bar.warping { background: #000; }
-        .hud-meter-bar.warping.critical { background: #cc0000; }
+        .hud-meter-bar.critical { background: #cc0000; }
 
         /* ==================== STAGE PROGRESS BAR ==================== */
         .stage-progress-container {
@@ -422,7 +266,6 @@
             flex-direction: column;
             gap: 4px;
         }
-
         .stage-progress-label {
             font-size: 9px;
             text-transform: uppercase;
@@ -431,12 +274,7 @@
             text-align: center;
             font-weight: 600;
         }
-
-        .stage-progress-bar {
-            display: flex;
-            position: relative;
-            height: 32px;
-        }
+        .stage-progress-bar { display: flex; position: relative; height: 32px; }
 
         .stage-item {
             flex: 1;
@@ -447,7 +285,6 @@
             position: relative;
             padding-bottom: 2px;
         }
-
         .stage-indicator {
             position: absolute;
             top: 2px;
@@ -457,11 +294,8 @@
             opacity: 0;
             transition: opacity 0.3s ease;
         }
-
-        .stage-item.damaged .stage-indicator {
-            opacity: 1;
-        }
-
+        .stage-item.damaged .stage-indicator { opacity: 1; }
+        .stage-item.nominal-past .stage-indicator { opacity: 1; color: #999; }
         .stage-name {
             font-size: clamp(7px, 1.8vw, 9px);
             font-weight: 600;
@@ -470,14 +304,9 @@
             color: #999;
             transition: color 0.3s ease;
         }
-
-        .stage-item.current .stage-name {
-            color: #666;
-        }
-
-        .stage-item.damaged .stage-name {
-            color: #cc0000;
-        }
+        .stage-item.current .stage-name { color: #666; }
+        .stage-item.damaged .stage-name { color: #cc0000; }
+        .stage-item.nominal-past .stage-name { color: #999; }
 
         .stage-arrow {
             position: absolute;
@@ -486,38 +315,17 @@
             font-weight: 900;
             color: #000;
             z-index: 100;
-            text-shadow: 
-                -1px -1px 0 #fff,
-                1px -1px 0 #fff,
-                -1px 1px 0 #fff,
-                1px 1px 0 #fff,
-                -1px 0 0 #fff,
-                1px 0 0 #fff,
-                0 -1px 0 #fff,
-                0 1px 0 #fff;
+            text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff,
+                         -1px 0 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, 0 1px 0 #fff;
             animation: arrowBob 1s ease-in-out infinite;
             pointer-events: none;
         }
+        @keyframes arrowBob { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-4px); } }
 
-        @keyframes arrowBob {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(-4px); }
-        }
+        .stage-divider { width: 1px; background: #ddd; height: 100%; position: absolute; right: 0; top: 0; }
+        .stage-item:last-child .stage-divider { display: none; }
 
-        .stage-divider {
-            width: 1px;
-            background: #ddd;
-            height: 100%;
-            position: absolute;
-            right: 0;
-            top: 0;
-        }
-
-        .stage-item:last-child .stage-divider {
-            display: none;
-        }
-
-        /* ==================== OVERLAY SYSTEM ==================== */
+        /* ==================== OVERLAYS ==================== */
         .overlay-container {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -534,18 +342,13 @@
             color: #cc0000;
             opacity: 0;
             transform: scale(2);
-            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-family: 'SF Mono', monospace;
             position: absolute;
-            text-shadow: 
-                -3px -3px 0 #fff, 3px -3px 0 #fff, -3px 3px 0 #fff, 3px 3px 0 #fff,
-                -3px 0 0 #fff, 3px 0 0 #fff, 0 -3px 0 #fff, 0 3px 0 #fff,
-                0 0 40px rgba(204, 0, 0, 0.6), 0 4px 20px rgba(0, 0, 0, 0.3);
+            text-shadow: -3px -3px 0 #fff, 3px -3px 0 #fff, -3px 3px 0 #fff, 3px 3px 0 #fff,
+                         -3px 0 0 #fff, 3px 0 0 #fff, 0 -3px 0 #fff, 0 3px 0 #fff,
+                         0 0 40px rgba(204, 0, 0, 0.6), 0 4px 20px rgba(0, 0, 0, 0.3);
         }
-
-        .countdown-number.visible {
-            animation: countdownPulse 1s ease-out forwards;
-        }
-
+        .countdown-number.active { animation: countdownPulse 1s ease-out forwards; }
         @keyframes countdownPulse {
             0% { transform: scale(2); opacity: 0; }
             15% { transform: scale(1); opacity: 1; }
@@ -558,61 +361,30 @@
             color: #00aa44;
             opacity: 0;
             transform: scale(0.5);
-            pointer-events: none;
             position: absolute;
-            text-shadow: 
-                -3px -3px 0 #fff, 3px -3px 0 #fff, -3px 3px 0 #fff, 3px 3px 0 #fff,
-                -3px 0 0 #fff, 3px 0 0 #fff, 0 -3px 0 #fff, 0 3px 0 #fff,
-                0 0 40px rgba(0, 170, 68, 0.6), 0 4px 20px rgba(0, 0, 0, 0.3);
+            text-shadow: -3px -3px 0 #fff, 3px -3px 0 #fff, -3px 3px 0 #fff, 3px 3px 0 #fff,
+                         -3px 0 0 #fff, 3px 0 0 #fff, 0 -3px 0 #fff, 0 3px 0 #fff,
+                         0 0 40px rgba(0, 170, 68, 0.6), 0 4px 20px rgba(0, 0, 0, 0.3);
         }
-
-        .success-checkmark.visible {
-            animation: checkmarkPop 1.2s ease-out forwards;
-        }
-
+        .success-checkmark.active { animation: checkmarkPop 1.2s ease-out forwards; }
         @keyframes checkmarkPop {
             0% { transform: scale(0.5); opacity: 0; }
             20% { transform: scale(1.2); opacity: 1; }
-            40% { transform: scale(1); opacity: 1; }
-            80% { transform: scale(1); opacity: 1; }
+            40%, 80% { transform: scale(1); opacity: 1; }
             100% { transform: scale(0.8); opacity: 0; }
         }
 
-        .warning-flash-overlay {
+        .flash-overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(204, 0, 0, 0.12);
             pointer-events: none;
             opacity: 0;
             z-index: 15;
         }
-
-        .warning-flash-overlay.active {
-            animation: flashWarningOverlay 0.3s ease-out;
-        }
-
-        @keyframes flashWarningOverlay {
-            0%, 100% { opacity: 0; }
-            50% { opacity: 1; }
-        }
-
-        .success-flash-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 170, 68, 0.15);
-            pointer-events: none;
-            opacity: 0;
-            z-index: 15;
-        }
-
-        .success-flash-overlay.active {
-            animation: flashSuccess 0.4s ease-out;
-        }
-
-        @keyframes flashSuccess {
-            0%, 100% { opacity: 0; }
-            50% { opacity: 1; }
-        }
+        .flash-overlay.warning { background: rgba(204, 0, 0, 0.12); }
+        .flash-overlay.success { background: rgba(0, 170, 68, 0.15); }
+        .flash-overlay.active { animation: flashOverlay 0.3s ease-out; }
+        @keyframes flashOverlay { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
 
         .info-overlay {
             position: absolute;
@@ -626,12 +398,7 @@
             transition: opacity 0.3s ease;
             z-index: 25;
         }
-
-        .info-overlay.visible {
-            opacity: 1;
-            pointer-events: auto;
-            cursor: pointer;
-        }
+        .info-overlay.visible { opacity: 1; pointer-events: auto; cursor: pointer; }
 
         .info-overlay-content {
             background: #fff;
@@ -645,43 +412,27 @@
             overflow-y: auto;
             width: clamp(240px, 70%, 450px);
         }
-
         .info-overlay.damage-mode .info-overlay-content { border-color: #cc0000; }
 
         .info-overlay-title {
             font-size: clamp(16px, 4vw, 28px);
             margin-bottom: 8px;
-            color: #000;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-
         .info-overlay.damage-mode .info-overlay-title { color: #cc0000; }
 
         .info-overlay-stage {
             font-size: clamp(12px, 3vw, 20px);
             font-weight: 700;
-            color: #000;
             margin-bottom: 12px;
         }
-
         .info-overlay.damage-mode .info-overlay-stage { color: #cc0000; }
 
-        .info-overlay-description {
-            font-size: clamp(10px, 2.5vw, 14px);
-            color: #333;
-            line-height: 1.5;
-            margin-bottom: 16px;
-            text-align: left;
-        }
+        .info-overlay-description { font-size: clamp(10px, 2.5vw, 14px); color: #333; line-height: 1.5; margin-bottom: 16px; text-align: left; }
+        .info-overlay-tap { font-size: clamp(9px, 2vw, 12px); color: #888; font-style: italic; }
 
-        .info-overlay-tap {
-            font-size: clamp(9px, 2vw, 12px);
-            color: #888;
-            font-style: italic;
-        }
-
-        /* ==================== TUTORIAL SYSTEM ==================== */
+        /* ==================== TUTORIAL ==================== */
         .tutorial-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -690,7 +441,6 @@
             display: none;
             cursor: pointer;
         }
-
         .tutorial-overlay.active { display: block; }
 
         .tutorial-spotlight {
@@ -711,7 +461,6 @@
             cursor: pointer;
             transition: all 0.4s ease;
         }
-
         .tutorial-arrow-container.position-below { flex-direction: column; }
         .tutorial-arrow-container.position-above { flex-direction: column-reverse; }
         .tutorial-arrow-container.position-left { flex-direction: row-reverse; }
@@ -722,12 +471,10 @@
             font-weight: 900;
             color: #000;
             line-height: 1;
-            text-shadow: 
-                -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff,
-                -2px 0 0 #fff, 2px 0 0 #fff, 0 -2px 0 #fff, 0 2px 0 #fff,
-                0 0 10px rgba(255, 255, 255, 0.8);
+            text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff,
+                         -2px 0 0 #fff, 2px 0 0 #fff, 0 -2px 0 #fff, 0 2px 0 #fff,
+                         0 0 10px rgba(255, 255, 255, 0.8);
         }
-
         .tutorial-arrow-container.position-below .tutorial-arrow { animation: arrowBounceDown 1s ease-in-out infinite; }
         .tutorial-arrow-container.position-above .tutorial-arrow { animation: arrowBounceUp 1s ease-in-out infinite; }
         .tutorial-arrow-container.position-left .tutorial-arrow { animation: arrowBounceLeft 1s ease-in-out infinite; }
@@ -750,13 +497,7 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             border: 2px solid #000;
         }
-
-        .tutorial-text small {
-            display: block;
-            margin-top: 6px;
-            font-size: 11px;
-            color: #888;
-        }
+        .tutorial-text small { display: block; margin-top: 6px; font-size: 11px; color: #888; }
 
         .tutorial-progress {
             position: fixed;
@@ -767,26 +508,19 @@
             gap: 8px;
             z-index: 101;
         }
-
         .tutorial-dot {
-            width: 10px;
-            height: 10px;
+            width: 10px; height: 10px;
             border-radius: 50%;
             background: rgba(0, 0, 0, 0.3);
             border: 2px solid #000;
             transition: all 0.3s ease;
         }
-
         .tutorial-dot.active { background: #000; transform: scale(1.2); }
         .tutorial-dot.completed { background: #00aa44; border-color: #00aa44; }
         .tutorial-overlay.idle-hint .tutorial-progress { display: none; }
 
-        /* Row 3: Oil Slider + Buttons */
-        .oil-slider-row {
-            display: flex;
-            gap: 10px;
-            align-items: stretch;
-        }
+        /* ==================== OIL SLIDER ==================== */
+        .oil-slider-row { display: flex; gap: 10px; align-items: stretch; }
 
         .oil-slider-container {
             flex: 1;
@@ -794,15 +528,11 @@
             border: 2px solid #000;
             border-radius: 8px;
             padding: 10px 16px;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
         }
-
-        .oil-slider-container.warning {
-            border-color: #cc0000;
-            box-shadow: 0 0 15px rgba(204, 0, 0, 0.2);
-        }
+        .oil-slider-container.warning { border-color: #cc0000; box-shadow: 0 0 15px rgba(204, 0, 0, 0.2); }
 
         .refill-oil-overlay {
             position: absolute;
@@ -816,15 +546,8 @@
             z-index: 5;
             border-radius: 6px;
         }
-
-        .refill-oil-overlay.active {
-            animation: refillFlash 0.5s ease-in-out infinite;
-        }
-
-        @keyframes refillFlash {
-            0%, 100% { opacity: 0.9; }
-            50% { opacity: 0.5; }
-        }
+        .refill-oil-overlay.active { animation: refillFlash 0.5s ease-in-out infinite; }
+        @keyframes refillFlash { 0%, 100% { opacity: 0.9; } 50% { opacity: 0.5; } }
 
         .refill-oil-text {
             color: #fff;
@@ -835,13 +558,7 @@
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        .oil-slider-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
+        .oil-slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .oil-slider-title {
             font-size: clamp(10px, 2.5vw, 12px);
             text-transform: uppercase;
@@ -851,28 +568,18 @@
             align-items: center;
             gap: 6px;
         }
-
-        .warning-icon {
-            color: #cc0000;
-            animation: blink 0.5s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
+        .warning-icon { color: #cc0000; animation: blink 0.5s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
         .oil-percentage {
             font-size: clamp(18px, 5vw, 28px);
             font-weight: 700;
-            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-family: 'SF Mono', monospace;
             transition: color 0.3s ease;
         }
-
         .oil-percentage.low { color: #cc0000; }
 
         .oil-slider-track-wrapper { position: relative; }
-
         .oil-slider-track {
             height: clamp(14px, 3vw, 20px);
             background: #e8e8e8;
@@ -880,43 +587,28 @@
             position: relative;
             cursor: pointer;
             border: 1px solid #ccc;
+            touch-action: none;
         }
 
-        .critical-line {
+        .critical-line, .check-oil-line {
             position: absolute;
-            left: 10%;
-            top: -4px;
-            bottom: -4px;
+            top: -4px; bottom: -4px;
             width: 0;
-            border-left: 2px dashed #cc0000;
             pointer-events: none;
             z-index: 2;
         }
-
-        .check-oil-line {
-            position: absolute;
-            left: 25%;
-            top: -4px;
-            bottom: -4px;
-            width: 0;
-            border-left: 2px dashed #dd8800;
-            pointer-events: none;
-            z-index: 2;
-        }
+        .critical-line { left: 10%; border-left: 2px dashed #cc0000; }
+        .check-oil-line { left: 25%; border-left: 2px dashed #dd8800; }
 
         .oil-slider-fill {
             position: absolute;
-            left: 0;
-            top: 0;
+            left: 0; top: 0;
             height: 100%;
             background: linear-gradient(90deg, #333, #000);
             border-radius: 9px;
             transition: width 0.1s ease;
         }
-
-        .oil-slider-fill.low {
-            background: linear-gradient(90deg, #cc0000, #ff4444);
-        }
+        .oil-slider-fill.low { background: linear-gradient(90deg, #cc0000, #ff4444); }
 
         .oil-slider-ball {
             position: absolute;
@@ -931,26 +623,16 @@
             transition: box-shadow 0.2s ease, border-color 0.3s ease;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
             z-index: 3;
+            touch-action: none;
         }
-
         .oil-slider-ball:hover { box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); }
         .oil-slider-ball:active { cursor: grabbing; }
         .oil-slider-ball.low { border-color: #cc0000; }
 
-        .slider-labels {
-            display: flex;
-            justify-content: space-between;
-            font-size: clamp(8px, 2vw, 10px);
-            color: #999;
-            margin-top: 6px;
-        }
+        .slider-labels { display: flex; justify-content: space-between; font-size: clamp(8px, 2vw, 10px); color: #999; margin-top: 6px; }
 
-        .buttons-container {
-            display: flex;
-            gap: 6px;
-        }
-
-        .refill-btn, .reset-btn {
+        .buttons-container { display: flex; gap: 6px; }
+        .btn {
             width: clamp(50px, 10vw, 80px);
             height: 100%;
             background: #000;
@@ -969,18 +651,16 @@
             justify-content: center;
             gap: 2px;
         }
+        .btn:hover { background: #333; border-color: #333; }
+        .btn:active { background: #555; }
+        .btn-icon { font-size: clamp(16px, 4vw, 22px); }
 
-        .refill-btn:hover, .reset-btn:hover { background: #333; border-color: #333; }
-        .refill-btn:active, .reset-btn:active { background: #555; }
-        .refill-btn .btn-icon, .reset-btn .btn-icon { font-size: clamp(16px, 4vw, 22px); }
-
-        /* ==================== DESKTOP / LANDSCAPE ==================== */
+        /* ==================== RESPONSIVE ==================== */
         @media (min-width: 601px), (orientation: landscape) {
             .container { padding-left: 5%; padding-right: 5%; }
             .engine-canvas-wrapper { min-height: 390px; }
         }
 
-        /* ==================== MOBILE PORTRAIT ==================== */
         @media (max-width: 600px) and (orientation: portrait) {
             .engine-canvas-wrapper { min-height: 36vh; }
             .hud-left-panel { left: 4px; width: clamp(80px, 22vw, 110px); }
@@ -991,18 +671,14 @@
             .warning-light .indicator { width: 8px; height: 8px; }
         }
 
-        /* ==================== RESPONSIVE ==================== */
         @media (max-width: 500px) {
             .warning-lights-top { gap: 6px; }
             .warning-light { font-size: 7px; }
             .warning-light .indicator { width: 7px; height: 7px; }
-            .hud-status { padding: 4px 6px; }
+            .hud-box { padding: 4px 6px; }
             .hud-status-stage { font-size: 9px; }
-            .hud-problems { padding: 4px 6px; }
             .hud-problems-list li { font-size: 7px; }
-            .hud-condition { padding: 4px 6px; }
             .hud-condition-text { font-size: 7px; }
-            .hud-rpm { padding: 4px 6px; }
             .hud-rpm-value { font-size: 14px; }
             .hud-rpm-reduction { font-size: 7px; }
             .hud-meter-content { padding: 4px 6px; }
@@ -1018,7 +694,7 @@
             .info-overlay-stage { font-size: 11px; }
             .info-overlay-description { font-size: 10px; }
             .buttons-container { gap: 4px; }
-            .refill-btn, .reset-btn { width: clamp(45px, 12vw, 70px); }
+            .btn { width: clamp(45px, 12vw, 70px); }
             .stage-progress-container { padding: 6px 8px; }
             .stage-name { font-size: 7px; }
         }
@@ -1034,79 +710,63 @@
         <div class="engine-canvas-wrapper" id="engineWrapper">
             <canvas id="engineCanvas"></canvas>
             
-            <!-- Warning Lights -->
             <div class="warning-lights-top">
-                <div class="warning-light amber" id="checkOilLight">
-                    <span class="indicator"></span>
-                    <span>Check Oil</span>
-                </div>
-                <div class="warning-light red" id="oilPressureLight">
-                    <span class="indicator"></span>
-                    <span>Oil Pressure</span>
-                </div>
-                <div class="warning-light amber" id="checkEngineLight">
-                    <span class="indicator"></span>
-                    <span>Check Engine</span>
-                </div>
+                <div class="warning-light amber" data-light="checkOil"><span class="indicator"></span><span>Check Oil</span></div>
+                <div class="warning-light red" data-light="oilPressure"><span class="indicator"></span><span>Oil Pressure</span></div>
+                <div class="warning-light amber" data-light="checkEngine"><span class="indicator"></span><span>Check Engine</span></div>
             </div>
             
-            <div class="hud-left-panel" id="hudLeftPanel">
-                <div class="hud-status" id="hudStatus" data-info="status">
-                    <div class="hud-status-label">Eng. Status</div>
+            <div class="hud-left-panel">
+                <div class="hud-box hud-status" data-info="status">
+                    <div class="hud-label">Eng. Status</div>
                     <div class="hud-status-stage" id="damageStage">PERFECT</div>
                     <div class="hud-status-text" id="statusText">1: Nominal</div>
                 </div>
-                <div class="hud-problems" id="hudProblems" data-info="problems">
+                <div class="hud-box hud-problems" id="hudProblems" data-info="problems">
                     <ul class="hud-problems-list" id="problemsList"></ul>
                 </div>
-                <div class="hud-condition" id="hudCondition" data-info="condition">
+                <div class="hud-box hud-condition" data-info="condition">
                     <div class="hud-condition-text" id="conditionText">Engine running at peak performance.</div>
                 </div>
             </div>
             
             <div class="hud-right-panel" id="hudRightPanel">
-                <div class="hud-rpm" id="hudRpm" data-info="rpm">
-                    <div class="hud-rpm-label">RPM</div>
+                <div class="hud-box hud-rpm" data-info="rpm">
+                    <div class="hud-label">RPM</div>
                     <div class="hud-rpm-value-container">
-                        <div class="hud-rpm-value" id="engineRPM">3000</div>
+                        <div class="hud-rpm-value" id="rpmValue">3000</div>
                         <div class="hud-rpm-reduction" id="rpmReduction">-0%</div>
                     </div>
                 </div>
                 <div class="hud-meters">
-                    <div class="hud-meter" id="lubMeterContainer" data-info="lube">
+                    <div class="hud-meter" data-meter="lube" data-info="lube">
                         <div class="hud-meter-warning"><span class="hud-meter-warning-icon">⚠</span></div>
                         <div class="hud-meter-content">
                             <div class="hud-meter-header">
                                 <span class="hud-meter-label">Lube</span>
-                                <span class="hud-meter-value" id="lubValue">100%</span>
+                                <span class="hud-meter-value">100%</span>
                             </div>
-                            <div class="hud-meter-bar-container">
-                                <div class="hud-meter-bar lubrication" id="lubMeter" style="width: 100%"></div>
-                            </div>
+                            <div class="hud-meter-bar-container"><div class="hud-meter-bar" style="width: 100%"></div></div>
                         </div>
                     </div>
-                    <div class="hud-meter" id="frictionMeterContainer" data-info="friction">
+                    <div class="hud-meter" data-meter="friction" data-info="friction">
                         <div class="hud-meter-warning"><span class="hud-meter-warning-icon">⚠</span></div>
                         <div class="hud-meter-content">
                             <div class="hud-meter-header">
                                 <span class="hud-meter-label">Friction</span>
-                                <span class="hud-meter-value" id="frictionValue">0%</span>
+                                <span class="hud-meter-value">0%</span>
                             </div>
-                            <div class="hud-meter-bar-container">
-                                <div class="hud-meter-bar friction" id="frictionMeter" style="width: 0%"></div>
-                            </div>
+                            <div class="hud-meter-bar-container"><div class="hud-meter-bar" style="width: 0%"></div></div>
                         </div>
                     </div>
-                    <div class="hud-meter" id="warpMeterContainer" data-info="warp">
+                    <div class="hud-meter" data-meter="warp" data-info="warp">
                         <div class="hud-meter-warning"><span class="hud-meter-warning-icon">⚠</span></div>
                         <div class="hud-meter-content">
                             <div class="hud-meter-header">
                                 <span class="hud-meter-label">Mtl. Warp</span>
-                                <span class="hud-meter-value" id="warpValue">0%</span>
+                                <span class="hud-meter-value">0%</span>
                             </div>
-                            <div class="hud-meter-bar-container">
-                                <div class="hud-meter-bar warping" id="warpMeter" style="width: 0%"></div>
-                            </div>
+                            <div class="hud-meter-bar-container"><div class="hud-meter-bar" style="width: 0%"></div></div>
                         </div>
                     </div>
                 </div>
@@ -1116,89 +776,51 @@
                 <div class="countdown-number" id="countdownNumber">3</div>
                 <div class="success-checkmark" id="successCheckmark">✓</div>
             </div>
-            <div class="warning-flash-overlay" id="warningFlash"></div>
-            <div class="success-flash-overlay" id="successFlash"></div>
+            <div class="flash-overlay warning" id="warningFlash"></div>
+            <div class="flash-overlay success" id="successFlash"></div>
             <div class="info-overlay" id="infoOverlay">
                 <div class="info-overlay-content">
-                    <div class="info-overlay-title" id="infoOverlayTitle">⚠ Engine Damage</div>
-                    <div class="info-overlay-stage" id="infoOverlayStage">Stage 2: WEAR</div>
-                    <div class="info-overlay-description" id="infoOverlayDescription"></div>
+                    <div class="info-overlay-title" id="infoTitle">⚠ Engine Damage</div>
+                    <div class="info-overlay-stage" id="infoStage">Stage 2: WEAR</div>
+                    <div class="info-overlay-description" id="infoDescription"></div>
                     <div class="info-overlay-tap">Tap anywhere to continue</div>
                 </div>
             </div>
         </div>
         
-        <!-- Stage Progress Bar -->
-        <div class="stage-progress-container" id="stageProgressContainer">
+        <div class="stage-progress-container">
             <div class="stage-progress-label">Damage Progression</div>
             <div class="stage-progress-bar" id="stageProgressBar">
                 <div class="stage-arrow" id="stageArrow">▼</div>
-                <div class="stage-item current" data-stage="0">
-                    <span class="stage-indicator">✕</span>
-                    <span class="stage-name">Nominal</span>
-                    <div class="stage-divider"></div>
-                </div>
-                <div class="stage-item" data-stage="1">
-                    <span class="stage-indicator">✕</span>
-                    <span class="stage-name">Wear</span>
-                    <div class="stage-divider"></div>
-                </div>
-                <div class="stage-item" data-stage="2">
-                    <span class="stage-indicator">✕</span>
-                    <span class="stage-name">Bearings</span>
-                    <div class="stage-divider"></div>
-                </div>
-                <div class="stage-item" data-stage="3">
-                    <span class="stage-indicator">✕</span>
-                    <span class="stage-name">Scoring</span>
-                    <div class="stage-divider"></div>
-                </div>
-                <div class="stage-item" data-stage="4">
-                    <span class="stage-indicator">✕</span>
-                    <span class="stage-name">Critical</span>
-                    <div class="stage-divider"></div>
-                </div>
-                <div class="stage-item" data-stage="5">
-                    <span class="stage-indicator">✕</span>
-                    <span class="stage-name">Seized</span>
-                </div>
+                <div class="stage-item current" data-stage="0"><span class="stage-indicator">✕</span><span class="stage-name">Nominal</span><div class="stage-divider"></div></div>
+                <div class="stage-item" data-stage="1"><span class="stage-indicator">✕</span><span class="stage-name">Wear</span><div class="stage-divider"></div></div>
+                <div class="stage-item" data-stage="2"><span class="stage-indicator">✕</span><span class="stage-name">Bearings</span><div class="stage-divider"></div></div>
+                <div class="stage-item" data-stage="3"><span class="stage-indicator">✕</span><span class="stage-name">Scoring</span><div class="stage-divider"></div></div>
+                <div class="stage-item" data-stage="4"><span class="stage-indicator">✕</span><span class="stage-name">Critical</span><div class="stage-divider"></div></div>
+                <div class="stage-item" data-stage="5"><span class="stage-indicator">✕</span><span class="stage-name">Seized</span></div>
             </div>
         </div>
         
-        <div class="oil-slider-row" id="oilSliderRow">
+        <div class="oil-slider-row">
             <div class="oil-slider-container" id="oilSection">
-                <div class="refill-oil-overlay" id="refillOilOverlay">
-                    <span class="refill-oil-text">⚠ REFILL OIL ⚠</span>
-                </div>
+                <div class="refill-oil-overlay" id="refillOverlay"><span class="refill-oil-text">⚠ REFILL OIL ⚠</span></div>
                 <div class="oil-slider-header">
-                    <div class="oil-slider-title">
-                        Oil Level
-                        <span class="warning-icon" id="oilWarningIcon" style="display: none;">⚠</span>
-                    </div>
+                    <div class="oil-slider-title">Oil Level<span class="warning-icon" id="oilWarningIcon" style="display: none;">⚠</span></div>
                     <div class="oil-percentage" id="oilPercentage"><span id="oilPercent">100</span>%</div>
                 </div>
                 <div class="oil-slider-track-wrapper">
                     <div class="critical-line"></div>
                     <div class="check-oil-line"></div>
-                    <div class="oil-slider-track" id="oilSliderTrack">
-                        <div class="oil-slider-fill" id="oilSliderFill"></div>
-                        <div class="oil-slider-ball" id="oilSliderBall"></div>
+                    <div class="oil-slider-track" id="oilTrack">
+                        <div class="oil-slider-fill" id="oilFill"></div>
+                        <div class="oil-slider-ball" id="oilBall"></div>
                     </div>
                 </div>
-                <div class="slider-labels">
-                    <span>Empty</span>
-                    <span>Full</span>
-                </div>
+                <div class="slider-labels"><span>Empty</span><span>Full</span></div>
             </div>
-            <div class="buttons-container" id="buttonsContainer">
-                <button class="refill-btn" id="refillBtn">
-                    <span class="btn-icon">🛢️</span>
-                    <span>Refill</span>
-                </button>
-                <button class="reset-btn" id="resetBtn">
-                    <span class="btn-icon">⚙️</span>
-                    <span>Reset</span>
-                </button>
+            <div class="buttons-container">
+                <button class="btn" id="refillBtn"><span class="btn-icon">🛢️</span><span>Refill</span></button>
+                <button class="btn" id="resetBtn"><span class="btn-icon">⚙️</span><span>Reset</span></button>
             </div>
         </div>
     </div>
@@ -1207,1134 +829,1007 @@
         <div class="tutorial-spotlight" id="tutorialSpotlight"></div>
         <div class="tutorial-arrow-container" id="tutorialArrowContainer">
             <div class="tutorial-arrow" id="tutorialArrow">▼</div>
-            <div class="tutorial-text" id="tutorialText">
-                Tutorial text here
-                <small>Tap to continue</small>
-            </div>
+            <div class="tutorial-text" id="tutorialText">Tutorial<small>Tap to continue</small></div>
         </div>
         <div class="tutorial-progress" id="tutorialProgress"></div>
     </div>
 
     <script>
-        // ==================== CANVAS SETUP ====================
-        const canvas = document.getElementById('engineCanvas');
-        const ctx = canvas.getContext('2d');
-        const engineWrapper = document.getElementById('engineWrapper');
-        
-        const CANVAS_WIDTH = 1040;
-        const CANVAS_HEIGHT = 520;
-        const ENGINE_CENTER_X = 520;
-        const ENGINE_CENTER_Y = 280;
-        
-        function resizeCanvas() {
-            const rect = engineWrapper.getBoundingClientRect();
-            canvas.style.width = rect.width + 'px';
-            canvas.style.height = rect.height + 'px';
-            const dpr = window.devicePixelRatio || 1;
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // ════════════════════════════════════════════════════════════════════════════
+    // CONFIGURATION & TUNING
+    // ════════════════════════════════════════════════════════════════════════════
+    const TUNING = {
+        oil: { checkOil: 25, pressure: 10, suckingAir: 15, bubbleStart: 25, critical: 10 },
+        friction: { countdownStart: 90, countdownCancel: 80, smokeStart: 60 },
+        meters: { lubeCritical: 30, frictionCritical: 60, warpCritical: 30 },
+        damage: { warpIncrements: [0, 5, 10, 18, 30, 50], rpmLossPerStage: 400, baseRpm: 3000 },
+        canvas: { width: 1040, height: 520, centerX: 520, centerY: 280, baseScale: 1.035, zoomedScale: 1.6 },
+        blink: { period: 400 }
+    };
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // DATA DEFINITIONS
+    // ════════════════════════════════════════════════════════════════════════════
+    const STAGE_DATA = [
+        { name: "PERFECT", desc: "1: Nominal", color: "", condition: "Engine running at peak performance.", problems: [] },
+        { name: "WEAR", desc: "2: Wear", color: "stage-1", condition: "Minor wear detected, efficiency slightly reduced.", problems: ["-13% RPMs"] },
+        { name: "BEARING", desc: "3: Damage", color: "stage-2", condition: "Bearing damage causing increased friction.", problems: ["-27% RPMs", "more friction"] },
+        { name: "SCORING", desc: "4: Cylinder", color: "stage-3", condition: "Cylinder scoring with significant metal warping.", problems: ["-40% RPMs", "high friction", "metal warped"] },
+        { name: "CRITICAL", desc: "5: Severe", color: "stage-4", condition: "Severe internal damage, failure imminent.", problems: ["-53% RPMs", "major friction", "severe warping"] },
+        { name: "SEIZED", desc: "6: Failed", color: "stage-5", condition: "Engine has seized. Replacement required.", problems: ["replace engine"] }
+    ];
+
+    const DAMAGE_DESCRIPTIONS = [
+        "",
+        "<b>Surface wear</b> has formed on cylinder walls from excessive friction. You'll notice <b>reduced RPM capacity</b> and the engine will have a harder time maintaining lubrication.",
+        "<b>Main bearings are damaged</b> from friction stress. Friction is now <b>significantly higher</b>, making it harder for oil to properly lubricate moving parts.",
+        "<b>Deep scoring marks</b> have formed on cylinder walls from metal-to-metal contact. <b>Permanent metal warping</b> has begun.",
+        "<b>Severe internal damage</b> throughout the engine. Connecting rods and crankshaft bearings are <b>compromised</b>.",
+        "The engine has <b>completely seized</b>. Pistons have welded to cylinder walls. The engine <b>cannot be repaired</b>."
+    ];
+
+    const INFO_CONTENT = {
+        rpm: { title: "RPM Meter", text: "<b>RPM</b> shows crankshaft speed. Damage reduces max RPM." },
+        lube: { title: "Lubrication", text: "<b>Lubrication</b> measures how well oil is coating the pistons and cylinder walls. When lubrication is high, the pistons glide smoothly without creating damaging friction. Low lubrication means metal-on-metal contact, which rapidly damages your engine." },
+        friction: { title: "Friction", text: "<b>Friction</b> shows the wear and heat building up on the pistons from inadequate lubrication. High friction causes the metal components to heat up and expand, leading to warping and permanent damage. This is not engine coolant temperature—it's localized heat from piston-to-cylinder contact." },
+        warp: { title: "Metal Warping", text: "<b>Metal Warping</b> indicates permanent physical deformation of pistons and cylinders caused by excessive friction heat. Warped components no longer fit together properly, causing misalignment, reduced efficiency, and eventually complete engine seizure. This damage cannot be reversed." },
+        status: { title: "Engine Status", text: "Shows damage stage from <b>1 (Perfect)</b> to <b>6 (Seized)</b>." },
+        problems: { title: "Problems", text: "Lists active issues: RPM loss, friction, warping." },
+        condition: { title: "Condition", text: "Summary of engine health and operational status." }
+    };
+
+    const METERS_CONFIG = {
+        lube: { getValue: () => state.lubrication, threshold: TUNING.meters.lubeCritical, criticalBelow: true },
+        friction: { getValue: () => state.friction, threshold: TUNING.meters.frictionCritical, criticalBelow: false },
+        warp: { getValue: () => state.warping, threshold: TUNING.meters.warpCritical, criticalBelow: false }
+    };
+
+    const LIGHTS_CONFIG = {
+        checkOil: () => state.oilLevel < TUNING.oil.checkOil,
+        oilPressure: () => state.oilLevel < TUNING.oil.pressure,
+        checkEngine: () => state.damageStage >= 2
+    };
+
+    const TUTORIAL_STEPS = [
+        { target: 'oilSection', position: 'above', text: '<b>Drag this slider</b> to control the <b>oil level</b>. Low oil causes engine damage!' },
+        { target: 'hudRightPanel', position: 'left', text: 'Monitor <b>engine stats</b>: <b>RPM</b>, <b>lubrication</b>, <b>friction</b>, and <b>warping</b>.' },
+        { target: 'stageProgressBar', position: 'above', text: '<b>Your goal:</b> Experience all <b>6 damage stages</b> by letting the engine overheat!' },
+        { target: 'refillBtn', position: 'above', text: 'Use <b>Refill</b> to add oil, or <b>Reset</b> to restore the engine.' }
+    ];
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // DOM REFERENCES
+    // ════════════════════════════════════════════════════════════════════════════
+    const DOM = {
+        canvas: document.getElementById('engineCanvas'),
+        wrapper: document.getElementById('engineWrapper'),
+        oilSection: document.getElementById('oilSection'),
+        oilTrack: document.getElementById('oilTrack'),
+        oilFill: document.getElementById('oilFill'),
+        oilBall: document.getElementById('oilBall'),
+        oilPercent: document.getElementById('oilPercent'),
+        oilPercentage: document.getElementById('oilPercentage'),
+        oilWarningIcon: document.getElementById('oilWarningIcon'),
+        refillOverlay: document.getElementById('refillOverlay'),
+        damageStage: document.getElementById('damageStage'),
+        statusText: document.getElementById('statusText'),
+        hudProblems: document.getElementById('hudProblems'),
+        problemsList: document.getElementById('problemsList'),
+        conditionText: document.getElementById('conditionText'),
+        rpmValue: document.getElementById('rpmValue'),
+        rpmReduction: document.getElementById('rpmReduction'),
+        countdownNumber: document.getElementById('countdownNumber'),
+        successCheckmark: document.getElementById('successCheckmark'),
+        warningFlash: document.getElementById('warningFlash'),
+        successFlash: document.getElementById('successFlash'),
+        infoOverlay: document.getElementById('infoOverlay'),
+        infoTitle: document.getElementById('infoTitle'),
+        infoStage: document.getElementById('infoStage'),
+        infoDescription: document.getElementById('infoDescription'),
+        stageProgressBar: document.getElementById('stageProgressBar'),
+        stageArrow: document.getElementById('stageArrow'),
+        stageItems: document.querySelectorAll('.stage-item'),
+        tutorialOverlay: document.getElementById('tutorialOverlay'),
+        tutorialSpotlight: document.getElementById('tutorialSpotlight'),
+        tutorialArrowContainer: document.getElementById('tutorialArrowContainer'),
+        tutorialArrow: document.getElementById('tutorialArrow'),
+        tutorialText: document.getElementById('tutorialText'),
+        tutorialProgress: document.getElementById('tutorialProgress'),
+        refillBtn: document.getElementById('refillBtn'),
+        resetBtn: document.getElementById('resetBtn'),
+        meters: document.querySelectorAll('[data-meter]'),
+        lights: document.querySelectorAll('[data-light]'),
+        infoTriggers: document.querySelectorAll('[data-info]')
+    };
+
+    const ctx = DOM.canvas.getContext('2d');
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // ENGINE STATE
+    // ════════════════════════════════════════════════════════════════════════════
+    const state = {
+        oilLevel: 100, lubrication: 100, friction: 0, warping: 0,
+        damageStage: 0, rpm: 3000, crankAngle: 0,
+        isRunning: true, countdownActive: false, countdownValue: 3, countdownTimer: null,
+        popupVisible: false, infoVisible: false, graceActive: false, statsFrozen: false,
+        warpAppliedAtStage: -1, galleryFlowOffset: 0, pumpSuckingAir: false,
+        particles: []
+    };
+
+    const zoom = { level: 1, targetLevel: 1, offsetX: 0, offsetY: 0, targetOffsetX: 0, targetOffsetY: 0, isZoomed: false };
+    const tutorial = { active: false, completed: false, step: 0, autoTimer: null, idleTimer: null, idleActive: false };
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // HELPERS
+    // ════════════════════════════════════════════════════════════════════════════
+    const pulse = el => { el.classList.remove('active'); void el.offsetWidth; el.classList.add('active'); };
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const blink = (period = TUNING.blink.period) => Math.floor(Date.now() / period) % 2 === 0;
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // CANVAS SETUP
+    // ════════════════════════════════════════════════════════════════════════════
+    function resizeCanvas() {
+        const rect = DOM.wrapper.getBoundingClientRect();
+        DOM.canvas.style.width = rect.width + 'px';
+        DOM.canvas.style.height = rect.height + 'px';
+        const dpr = window.devicePixelRatio || 1;
+        DOM.canvas.width = rect.width * dpr;
+        DOM.canvas.height = rect.height * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // OIL SYSTEM GEOMETRY
+    // ════════════════════════════════════════════════════════════════════════════
+    const oilGeom = {
+        panX: 270, panY: 405, panW: 500, panH: 70, panBottom: 475,
+        pickupX: 320, pickupTop: 395, pickupBottom: 465, pickupW: 12, screenW: 30,
+        pumpX: 295, pumpY: 360, pumpW: 50, pumpH: 35,
+        galleryY: 340, galleryLeft: 280, galleryRight: 750,
+        feeds: [320, 400, 480, 560, 640, 720], feedTop: 275
+    };
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // UNIFIED PARTICLE SYSTEM (with fixed update returns)
+    // ════════════════════════════════════════════════════════════════════════════
+    const PARTICLE_PRESETS = {
+        smoke: {
+            init: p => {
+                p.vx = (Math.random() - 0.5) * 0.5;
+                p.vy = -Math.random() * 0.8 - 0.2;
+                p.decay = 0.015;
+                p.size = 1 + Math.random() * 1.5;
+                p.grow = 0.06;
+            },
+            update: p => { 
+                p.vx *= 0.95; 
+                p.vy *= 0.95; 
+                p.size += p.grow;
+                return true;
+            },
+            draw: (c, p) => {
+                c.fillStyle = `rgba(140,140,140,${p.life * 0.6})`;
+                c.beginPath(); c.arc(p.x, p.y, p.size, 0, Math.PI * 2); c.fill();
+            }
+        },
+        windage: {
+            init: (p, angle, speed) => {
+                p.vx = Math.cos(angle) * speed;
+                p.vy = Math.sin(angle) * speed;
+                p.decay = 0.02 + Math.random() * 0.01;
+                p.size = 1.5 + Math.random() * 1.5;
+                p.gravity = 0.15;
+            },
+            update: p => { 
+                p.vy += p.gravity; 
+                return p.y <= oilGeom.panBottom; 
+            },
+            draw: (c, p) => {
+                c.fillStyle = `rgba(0,0,0,${p.life * 0.6})`;
+                c.beginPath(); c.arc(p.x, p.y, p.size, 0, Math.PI * 2); c.fill();
+            }
+        },
+        drainback: {
+            init: p => {
+                p.x += (Math.random() - 0.5) * 20;
+                p.vx = (Math.random() - 0.5) * 0.5;
+                p.vy = 0.5 + Math.random();
+                p.decay = 0.008;
+                p.size = 2 + Math.random() * 2;
+                p.gravity = 0.1;
+            },
+            update: p => { 
+                p.vy += p.gravity; 
+                return p.y <= oilGeom.panBottom; 
+            },
+            draw: (c, p) => {
+                c.fillStyle = `rgba(0,0,0,${p.life * 0.5})`;
+                c.beginPath(); c.arc(p.x, p.y, p.size, 0, Math.PI * 2); c.fill();
+            }
+        },
+        bubble: {
+            init: p => {
+                p.x += (Math.random() - 0.5) * oilGeom.pickupW * 0.6;
+                p.vy = -0.8 - Math.random();
+                p.decay = 0.025;
+                p.size = 1 + Math.random() * 1.5;
+                p.wobble = 0;
+            },
+            update: p => { 
+                p.wobble = Math.sin(p.y * 0.15) * 0.3; 
+                return p.y >= oilGeom.pumpY; 
+            },
+            draw: (c, p) => {
+                c.fillStyle = `rgba(255,255,255,${p.life * 0.9})`;
+                c.strokeStyle = `rgba(180,180,180,${p.life * 0.7})`;
+                c.lineWidth = 1;
+                c.beginPath(); c.arc(p.x, p.y, p.size, 0, Math.PI * 2); c.fill(); c.stroke();
+            }
         }
-        
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-        
-        // ==================== ZOOM STATE ====================
-        const zoom = {
-            level: 1, targetLevel: 1,
-            offsetX: 0, offsetY: 0,
-            targetOffsetX: 0, targetOffsetY: 0,
-            isZoomed: false,
-            baseScale: 1.035, zoomedScale: 1.6
-        };
-        
-        // ==================== ENGINE STATE ====================
-        const engine = {
-            oilLevel: 100, lubrication: 100, friction: 0, warping: 0,
-            damageStage: 0, maxReachedStage: 0, rpm: 3000, crankAngle: 0,
-            isRunning: true, countdownActive: false, countdownValue: 3,
-            countdownTimer: null, damagePopupVisible: false, infoPopupVisible: false,
-            graceActive: false, frictionParticles: [], windageParticles: [],
-            drainbackParticles: [], warpAppliedAtStage: -1, statsFrozen: false,
-            rpmReductionPercent: 0, galleryFlowOffset: 0, pumpSuckingAir: false,
-            suckingAirFlashOn: false
-        };
-        
-        // Sucking air flash timer
-        setInterval(() => {
-            engine.suckingAirFlashOn = !engine.suckingAirFlashOn;
-        }, 400);
-        
-        const warpIncrements = [0, 5, 10, 18, 30, 50];
-        const damageEffects = [
-            { lubeLossMult: 1.0, frictionMult: 1.0 },
-            { lubeLossMult: 1.3, frictionMult: 1.3 },
-            { lubeLossMult: 1.6, frictionMult: 1.6 },
-            { lubeLossMult: 2.0, frictionMult: 2.0 },
-            { lubeLossMult: 2.5, frictionMult: 2.5 },
-            { lubeLossMult: 3.0, frictionMult: 3.0 }
-        ];
-        
-        const stageProblems = [
-            [], ["-13% RPMs"], ["-27% RPMs", "more friction"],
-            ["-40% RPMs", "high friction", "metal warped"],
-            ["-53% RPMs", "major friction", "severe warping"],
-            ["replace engine"]
-        ];
-        
-        const stageConditions = [
-            "Engine running at peak performance.",
-            "Minor wear detected, efficiency slightly reduced.",
-            "Bearing damage causing increased friction.",
-            "Cylinder scoring with significant metal warping.",
-            "Severe internal damage, failure imminent.",
-            "Engine has seized. Replacement required."
-        ];
-        
-        const damageDescriptions = [
-            "",
-            "<b>Surface wear</b> has formed on cylinder walls from excessive friction. You'll notice <b>reduced RPM capacity</b> and the engine will have a harder time maintaining lubrication.",
-            "<b>Main bearings are damaged</b> from friction stress. Friction is now <b>significantly higher</b>, making it harder for oil to properly lubricate moving parts.",
-            "<b>Deep scoring marks</b> have formed on cylinder walls from metal-to-metal contact. <b>Permanent metal warping</b> has begun.",
-            "<b>Severe internal damage</b> throughout the engine. Connecting rods and crankshaft bearings are <b>compromised</b>.",
-            "The engine has <b>completely seized</b>. Pistons have welded to cylinder walls. The engine <b>cannot be repaired</b>."
-        ];
-        
-        const damageStages = [
-            { name: "PERFECT", description: "1: Nominal", color: "" },
-            { name: "WEAR", description: "2: Wear", color: "stage-1" },
-            { name: "BEARING", description: "3: Damage", color: "stage-2" },
-            { name: "SCORING", description: "4: Cylinder", color: "stage-3" },
-            { name: "CRITICAL", description: "5: Severe", color: "stage-4" },
-            { name: "SEIZED", description: "6: Failed", color: "stage-5" }
-        ];
-        
-        // Updated info content with more informative descriptions
-        const infoContent = {
-            rpm: { title: "RPM Meter", description: "<b>RPM</b> shows crankshaft speed. Damage reduces max RPM." },
-            lube: { title: "Lubrication", description: "<b>Lubrication</b> measures how well oil is coating the pistons and cylinder walls. When lubrication is high, the pistons glide smoothly without creating damaging friction. Low lubrication means metal-on-metal contact, which rapidly damages your engine." },
-            friction: { title: "Friction", description: "<b>Friction</b> shows the wear and heat building up on the pistons from inadequate lubrication. High friction causes the metal components to heat up and expand, leading to warping and permanent damage. This is not engine coolant temperature—it's localized heat from piston-to-cylinder contact." },
-            warp: { title: "Metal Warping", description: "<b>Metal Warping</b> indicates permanent physical deformation of pistons and cylinders caused by excessive friction heat. Warped components no longer fit together properly, causing misalignment, reduced efficiency, and eventually complete engine seizure. This damage cannot be reversed." },
-            status: { title: "Engine Status", description: "Shows damage stage from <b>1 (Perfect)</b> to <b>6 (Seized)</b>." },
-            problems: { title: "Problems", description: "Lists active issues: RPM loss, friction, warping." },
-            condition: { title: "Condition", description: "Summary of engine health and operational status." }
-        };
-        
-        // ==================== DOM ELEMENTS ====================
-        const oilSliderTrack = document.getElementById('oilSliderTrack');
-        const oilSliderFill = document.getElementById('oilSliderFill');
-        const oilSliderBall = document.getElementById('oilSliderBall');
-        const oilPercent = document.getElementById('oilPercent');
-        const oilPercentage = document.getElementById('oilPercentage');
-        const oilSection = document.getElementById('oilSection');
-        const oilWarningIcon = document.getElementById('oilWarningIcon');
-        const refillOilOverlay = document.getElementById('refillOilOverlay');
-        const lubMeter = document.getElementById('lubMeter');
-        const lubValue = document.getElementById('lubValue');
-        const lubMeterContainer = document.getElementById('lubMeterContainer');
-        const frictionMeter = document.getElementById('frictionMeter');
-        const frictionValue = document.getElementById('frictionValue');
-        const frictionMeterContainer = document.getElementById('frictionMeterContainer');
-        const warpMeter = document.getElementById('warpMeter');
-        const warpValue = document.getElementById('warpValue');
-        const warpMeterContainer = document.getElementById('warpMeterContainer');
-        const damageStageEl = document.getElementById('damageStage');
-        const statusText = document.getElementById('statusText');
-        const hudStatus = document.getElementById('hudStatus');
-        const hudProblems = document.getElementById('hudProblems');
-        const problemsList = document.getElementById('problemsList');
-        const hudCondition = document.getElementById('hudCondition');
-        const conditionText = document.getElementById('conditionText');
-        const countdownNumber = document.getElementById('countdownNumber');
-        const successCheckmark = document.getElementById('successCheckmark');
-        const warningFlash = document.getElementById('warningFlash');
-        const successFlash = document.getElementById('successFlash');
-        const infoOverlay = document.getElementById('infoOverlay');
-        const infoOverlayTitle = document.getElementById('infoOverlayTitle');
-        const infoOverlayStage = document.getElementById('infoOverlayStage');
-        const infoOverlayDescription = document.getElementById('infoOverlayDescription');
-        const resetBtn = document.getElementById('resetBtn');
-        const refillBtn = document.getElementById('refillBtn');
-        const engineRPM = document.getElementById('engineRPM');
-        const rpmReduction = document.getElementById('rpmReduction');
-        const checkOilLight = document.getElementById('checkOilLight');
-        const oilPressureLight = document.getElementById('oilPressureLight');
-        const checkEngineLight = document.getElementById('checkEngineLight');
-        const stageProgressBar = document.getElementById('stageProgressBar');
-        const stageArrow = document.getElementById('stageArrow');
-        const stageItems = document.querySelectorAll('.stage-item');
-        
-        // ==================== STAGE PROGRESS BAR ====================
-        function updateStageProgressBar() {
-            stageItems.forEach((item, i) => {
-                item.classList.remove('current', 'damaged');
-                
-                // Current stage
-                if (i === engine.damageStage) {
-                    item.classList.add('current');
-                    // Stages 1-5 (not Nominal) get damaged class when current
-                    if (i > 0) {
-                        item.classList.add('damaged');
-                    }
-                }
-                // Completed/past stages get damaged class (including Nominal when at stage 2+)
-                else if (i < engine.damageStage) {
-                    // Nominal (index 0) gets X when at stage 2 (index 1) or beyond
-                    if (i === 0 && engine.damageStage >= 2) {
-                        item.classList.add('damaged');
-                    } else if (i > 0) {
-                        item.classList.add('damaged');
-                    }
-                }
-            });
+    };
+
+    function createParticle(type, x, y, ...args) {
+        const preset = PARTICLE_PRESETS[type];
+        const p = { type, x, y, vx: 0, vy: 0, life: 1, decay: 0.02, size: 2 };
+        preset.init(p, ...args);
+        return p;
+    }
+
+    function updateParticle(p) {
+        const preset = PARTICLE_PRESETS[p.type];
+        p.x += p.vx + (p.wobble || 0);
+        p.y += p.vy;
+        p.life -= p.decay;
+        const inBounds = preset.update ? preset.update(p) : true;
+        return p.life > 0 && inBounds;
+    }
+
+    function drawParticle(c, p) {
+        PARTICLE_PRESETS[p.type].draw(c, p);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // CYLINDER CLASS
+    // ════════════════════════════════════════════════════════════════════════════
+    class Cylinder {
+        constructor(x, y, angle, phase, index) {
+            Object.assign(this, { x, y, baseAngle: angle, phase, index, pistonPos: 0, prevPistonPos: 0, pistonWarp: 0, intakeValve: 0, exhaustValve: 0, strokePhase: 0 });
+        }
+        update(crankAngle, rpmReduction) {
+            const adj = (crankAngle + this.phase) % 720;
+            this.prevPistonPos = this.pistonPos;
+            this.pistonPos = Math.sin((adj * Math.PI) / 360) * 35;
+            this.strokePhase = Math.floor(adj / 180);
+            this.pistonWarp = 10 * (rpmReduction / 100) * ((this.index % 2 === 0) ? 1 : -1);
+            this.intakeValve = adj < 180 ? Math.sin((adj * Math.PI) / 180) * 12 : 0;
+            this.exhaustValve = adj >= 540 ? Math.sin(((adj - 540) * Math.PI) / 180) * 12 : 0;
+        }
+        draw(c) {
+            c.save();
+            c.translate(this.x, this.y);
+            c.rotate((this.baseAngle * Math.PI) / 180);
             
-            // Track max reached stage
-            if (engine.damageStage > engine.maxReachedStage) {
-                engine.maxReachedStage = engine.damageStage;
-            }
+            const shake = state.damageStage > 2 ? (Math.random() - 0.5) * state.damageStage * 1.5 : 0;
+            const { friction: fric, lubrication: lube, damageStage: dmg } = state;
             
-            // Position arrow
-            const currentItem = stageItems[engine.damageStage];
-            if (currentItem) {
-                const itemRect = currentItem.getBoundingClientRect();
-                const barRect = stageProgressBar.getBoundingClientRect();
-                const centerX = itemRect.left - barRect.left + itemRect.width / 2;
-                stageArrow.style.left = centerX + 'px';
+            let stroke = '#000', fill = '#fff', pistonFill = '#fff';
+            if (fric > 70) pistonFill = `rgb(255,${Math.floor(255 - (fric - 70) / 30 * 200)},${Math.floor(255 - (fric - 70) / 30 * 200)})`;
+            if (dmg >= 4) { stroke = '#880000'; fill = '#ffeeee'; }
+            else if (dmg >= 2) { stroke = '#aa0000'; fill = '#fff8f8'; }
+            
+            c.strokeStyle = stroke; c.fillStyle = fill; c.lineWidth = 2;
+            c.beginPath(); c.rect(-30 + shake, -90, 60, 130); c.fill(); c.stroke();
+            c.beginPath(); c.rect(-35 + shake, -105, 70, 20); c.fill(); c.stroke();
+            c.fillStyle = fric > 60 ? '#fff0f0' : '#f5f5f5';
+            c.beginPath(); c.rect(-25 + shake, -85, 50, 15); c.fill(); c.stroke();
+            
+            c.fillStyle = fill;
+            c.beginPath(); c.rect(-20 + shake, -100 + this.intakeValve, 6, 20); c.fill(); c.stroke();
+            c.beginPath(); c.ellipse(-17 + shake, -100 + this.intakeValve, 8, 3, 0, 0, Math.PI * 2); c.fill(); c.stroke();
+            c.beginPath(); c.rect(14 + shake, -100 + this.exhaustValve, 6, 20); c.fill(); c.stroke();
+            c.beginPath(); c.ellipse(17 + shake, -100 + this.exhaustValve, 8, 3, 0, 0, Math.PI * 2); c.fill(); c.stroke();
+            
+            c.save();
+            c.translate(shake, this.pistonPos + 7);
+            c.rotate((this.pistonWarp * Math.PI) / 180);
+            c.fillStyle = pistonFill; c.lineWidth = 2;
+            c.beginPath(); c.rect(-25, -15, 50, 30); c.fill(); c.stroke();
+            
+            const lubeFactor = Math.max(0, (lube - 30) / 70);
+            if (lubeFactor > 0.02) {
+                c.strokeStyle = `rgba(0,0,0,${Math.pow(lubeFactor, 1.5)})`;
+                c.lineWidth = 2 + lubeFactor * 4; c.lineCap = 'round';
+                c.beginPath(); c.moveTo(-25, -12); c.lineTo(-25, 11); c.stroke();
+                c.beginPath(); c.moveTo(25, -12); c.lineTo(25, 11); c.stroke();
             }
-        }
-        
-        // ==================== INFO POPUP SYSTEM ====================
-        function showInfoPopup(infoKey) {
-            if (engine.countdownActive || engine.damagePopupVisible) return;
-            const info = infoContent[infoKey];
-            if (!info) return;
-            engine.infoPopupVisible = true;
-            engine.statsFrozen = true;
-            infoOverlay.classList.remove('damage-mode');
-            infoOverlayTitle.textContent = info.title;
-            infoOverlayStage.style.display = 'none';
-            infoOverlayDescription.innerHTML = info.description;
-            infoOverlay.classList.add('visible');
-        }
-        
-        function showDamagePopup() {
-            engine.damagePopupVisible = true;
-            engine.statsFrozen = true;
-            infoOverlay.classList.add('damage-mode');
-            infoOverlayTitle.textContent = '⚠ Engine Damage';
-            infoOverlayStage.style.display = 'block';
-            infoOverlayStage.textContent = `Stage ${engine.damageStage + 1}: ${damageStages[engine.damageStage].name}`;
-            infoOverlayDescription.innerHTML = damageDescriptions[engine.damageStage];
-            infoOverlay.classList.add('visible');
-            refillOilOverlay.classList.remove('active');
-            warningFlash.classList.remove('active');
-            void warningFlash.offsetWidth;
-            warningFlash.classList.add('active');
-        }
-        
-        function hideInfoOverlay() {
-            infoOverlay.classList.remove('visible');
-            if (engine.damagePopupVisible) {
-                engine.damagePopupVisible = false;
-                engine.statsFrozen = false;
-                engine.graceActive = true;
-                setTimeout(() => {
-                    engine.graceActive = false;
-                    if (engine.friction > 90 && engine.damageStage < 5 && !engine.countdownActive) startCountdown();
-                }, 2000);
-            } else if (engine.infoPopupVisible) {
-                engine.infoPopupVisible = false;
-                engine.statsFrozen = false;
-            }
-        }
-        
-        infoOverlay.addEventListener('click', hideInfoOverlay);
-        document.querySelectorAll('[data-info]').forEach(el => {
-            el.addEventListener('click', (e) => { e.stopPropagation(); showInfoPopup(el.dataset.info); });
-        });
-        
-        // ==================== ZOOM ====================
-        function getCanvasCoordinates(e) {
-            const rect = canvas.getBoundingClientRect();
-            let clientX, clientY;
-            if (e.touches && e.touches.length > 0) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
-            else if (e.changedTouches && e.changedTouches.length > 0) { clientX = e.changedTouches[0].clientX; clientY = e.changedTouches[0].clientY; }
-            else { clientX = e.clientX; clientY = e.clientY; }
-            return { relX: (clientX - rect.left) / rect.width, relY: (clientY - rect.top) / rect.height };
-        }
-        
-        function handleZoomTap(e) {
-            if (engine.damagePopupVisible || engine.infoPopupVisible || tutorialActive || idleHintActive) return;
-            e.preventDefault();
-            const coords = getCanvasCoordinates(e);
-            if (zoom.isZoomed) {
-                zoom.isZoomed = false; zoom.targetLevel = zoom.baseScale;
-                zoom.targetOffsetX = 0; zoom.targetOffsetY = 0;
-                canvas.classList.remove('zoomed');
-            } else {
-                zoom.isZoomed = true; zoom.targetLevel = zoom.zoomedScale;
-                canvas.classList.add('zoomed');
-                const dx = (coords.relX - 0.5) * 2, dy = (coords.relY - 0.5) * 2;
-                zoom.targetOffsetX = -dx * 150; zoom.targetOffsetY = -dy * 150;
-            }
-        }
-        
-        canvas.addEventListener('click', handleZoomTap);
-        canvas.addEventListener('touchend', (e) => { if (e.cancelable) e.preventDefault(); handleZoomTap(e); }, { passive: false });
-        
-        function updateZoom() {
-            const s = 0.12;
-            zoom.level += (zoom.targetLevel - zoom.level) * s;
-            zoom.offsetX += (zoom.targetOffsetX - zoom.offsetX) * s;
-            zoom.offsetY += (zoom.targetOffsetY - zoom.offsetY) * s;
-        }
-        
-        // ==================== TUTORIAL SYSTEM ====================
-        const tutorialOverlay = document.getElementById('tutorialOverlay');
-        const tutorialSpotlight = document.getElementById('tutorialSpotlight');
-        const tutorialArrowContainer = document.getElementById('tutorialArrowContainer');
-        const tutorialArrow = document.getElementById('tutorialArrow');
-        const tutorialText = document.getElementById('tutorialText');
-        const tutorialProgress = document.getElementById('tutorialProgress');
-        
-        const tutorialSteps = [
-            { target: 'oilSection', position: 'above', text: '<b>Drag this slider</b> to control the <b>oil level</b>. Low oil causes engine damage!' },
-            { target: 'hudRightPanel', position: 'left', text: 'Monitor <b>engine stats</b>: <b>RPM</b>, <b>lubrication</b>, <b>friction</b>, and <b>warping</b>.' },
-            { target: 'stageProgressContainer', position: 'above', text: '<b>Your goal:</b> Experience all <b>6 damage stages</b> by letting the engine overheat!' },
-            { target: 'buttonsContainer', position: 'above', text: 'Use <b>Refill</b> to add oil, or <b>Reset</b> to restore the engine.' }
-        ];
-        
-        let currentTutorialStep = 0, tutorialAutoTimer = null, tutorialActive = false, tutorialCompleted = false;
-        let idleTimer = null, idleHintActive = false;
-        const IDLE_TIMEOUT = 15000;
-        
-        function resetIdleTimer() {
-            if (idleTimer) clearTimeout(idleTimer);
-            if (idleHintActive) hideIdleHint();
-            if (tutorialCompleted && !tutorialActive && !engine.countdownActive && !engine.damagePopupVisible && !engine.infoPopupVisible)
-                idleTimer = setTimeout(showIdleHint, IDLE_TIMEOUT);
-        }
-        
-        function showIdleHint() {
-            if (tutorialActive || engine.countdownActive || engine.damagePopupVisible || engine.infoPopupVisible) return;
-            idleHintActive = true;
-            tutorialOverlay.classList.add('active', 'idle-hint');
-            const targetEl = document.getElementById('oilSection');
-            const rect = targetEl.getBoundingClientRect();
-            tutorialSpotlight.style.left = (rect.left - 8) + 'px';
-            tutorialSpotlight.style.top = (rect.top - 8) + 'px';
-            tutorialSpotlight.style.width = (rect.width + 16) + 'px';
-            tutorialSpotlight.style.height = (rect.height + 16) + 'px';
-            tutorialArrow.textContent = '▼';
-            tutorialArrowContainer.className = 'tutorial-arrow-container position-above';
-            tutorialArrowContainer.style.left = (rect.left + rect.width / 2) + 'px';
-            tutorialArrowContainer.style.top = (rect.top - 8) + 'px';
-            tutorialArrowContainer.style.transform = 'translate(-50%, -100%)';
-            tutorialText.innerHTML = '<b>Move oil level slider</b> to affect the engine<small>Tap to dismiss</small>';
-        }
-        
-        function hideIdleHint() { idleHintActive = false; tutorialOverlay.classList.remove('active', 'idle-hint'); }
-        function handleUserInteraction() { resetIdleTimer(); }
-        ['mousedown', 'mousemove', 'mouseup', 'touchstart', 'touchmove', 'touchend', 'keydown', 'keyup', 'scroll', 'wheel', 'click'].forEach(evt => document.addEventListener(evt, handleUserInteraction));
-        
-        function startTutorial() {
-            tutorialActive = true; tutorialCompleted = false; currentTutorialStep = 0;
-            tutorialOverlay.classList.add('active'); tutorialOverlay.classList.remove('idle-hint');
-            tutorialProgress.innerHTML = '';
-            tutorialSteps.forEach((_, i) => {
-                const dot = document.createElement('div');
-                dot.className = 'tutorial-dot' + (i === 0 ? ' active' : '');
-                tutorialProgress.appendChild(dot);
-            });
-            showTutorialStep(0);
-        }
-        
-        function showTutorialStep(stepIndex) {
-            if (stepIndex >= tutorialSteps.length) { endTutorial(); return; }
-            const step = tutorialSteps[stepIndex];
-            const targetEl = document.getElementById(step.target);
-            const rect = targetEl.getBoundingClientRect();
-            tutorialSpotlight.style.left = (rect.left - 8) + 'px';
-            tutorialSpotlight.style.top = (rect.top - 8) + 'px';
-            tutorialSpotlight.style.width = (rect.width + 16) + 'px';
-            tutorialSpotlight.style.height = (rect.height + 16) + 'px';
-            const arrows = { below: '▲', above: '▼', left: '▶', right: '◀' };
-            tutorialArrow.textContent = arrows[step.position];
-            tutorialArrowContainer.className = 'tutorial-arrow-container position-' + step.position;
-            let arrowX, arrowY;
-            switch (step.position) {
-                case 'below': arrowX = rect.left + rect.width / 2; arrowY = rect.bottom + 8; tutorialArrowContainer.style.transform = 'translate(-50%, 0)'; break;
-                case 'above': arrowX = rect.left + rect.width / 2; arrowY = rect.top - 8; tutorialArrowContainer.style.transform = 'translate(-50%, -100%)'; break;
-                case 'left': arrowX = rect.left - 8; arrowY = rect.top + rect.height / 2; tutorialArrowContainer.style.transform = 'translate(-100%, -50%)'; break;
-                case 'right': arrowX = rect.right + 8; arrowY = rect.top + rect.height / 2; tutorialArrowContainer.style.transform = 'translate(0, -50%)'; break;
-            }
-            tutorialArrowContainer.style.left = arrowX + 'px';
-            tutorialArrowContainer.style.top = arrowY + 'px';
-            tutorialText.innerHTML = step.text + '<small>Tap to continue</small>';
-            const dots = tutorialProgress.querySelectorAll('.tutorial-dot');
-            dots.forEach((dot, i) => { dot.classList.remove('active', 'completed'); if (i < stepIndex) dot.classList.add('completed'); else if (i === stepIndex) dot.classList.add('active'); });
-            if (tutorialAutoTimer) clearTimeout(tutorialAutoTimer);
-            tutorialAutoTimer = setTimeout(advanceTutorial, 5000);
-        }
-        
-        function advanceTutorial() { if (!tutorialActive) return; currentTutorialStep++; if (currentTutorialStep >= tutorialSteps.length) endTutorial(); else showTutorialStep(currentTutorialStep); }
-        function endTutorial() { tutorialActive = false; tutorialCompleted = true; tutorialOverlay.classList.remove('active'); if (tutorialAutoTimer) clearTimeout(tutorialAutoTimer); resetIdleTimer(); }
-        
-        tutorialOverlay.addEventListener('click', () => { if (idleHintActive) hideIdleHint(); else advanceTutorial(); });
-        tutorialArrowContainer.addEventListener('click', (e) => { e.stopPropagation(); if (idleHintActive) hideIdleHint(); else advanceTutorial(); });
-        window.addEventListener('load', () => { setTimeout(startTutorial, 500); updateStageProgressBar(); });
-        
-        // ==================== OIL SYSTEM GEOMETRY ====================
-        const oilSystem = {
-            panX: 270, panY: 405, panWidth: 500, panHeight: 70,
-            panBottomY: 475,
-            pickupX: 320, pickupTopY: 395, pickupBottomY: 465,
-            pickupWidth: 12,
-            pickupScreenWidth: 30,
-            pumpX: 295, pumpY: 360, pumpWidth: 50, pumpHeight: 35,
-            mainGalleryY: 340,
-            mainGalleryLeft: 280,
-            mainGalleryRight: 750,
-            cylinderFeeds: [320, 400, 480, 560, 640, 720],
-            feedTopY: 275,
-            airBubbles: []
-        };
-        
-        // ==================== PARTICLE CLASSES ====================
-        class FrictionParticle {
-            constructor(x, y, type) {
-                this.x = x; this.y = y; this.type = type;
-                if (type === 'smoke') {
-                    this.vx = (Math.random() - 0.5) * 0.5;
-                    this.vy = -Math.random() * 0.8 - 0.2;
-                    this.life = 1.0; this.decay = 0.015;
-                    this.size = 1 + Math.random() * 1.5;
-                } else if (type === 'flash') {
-                    this.vx = (Math.random() - 0.5) * 3;
-                    this.vy = (Math.random() - 0.5) * 5;
-                    this.life = 1.0; this.decay = 0.12;
-                    this.size = 4 + Math.random() * 4;
-                    this.colorPhase = Math.random() * 0.3;
-                } else {
-                    this.vx = (Math.random() - 0.5) * 4;
-                    this.vy = (Math.random() - 0.5) * 8;
-                    this.life = 1.0; this.decay = 0.08;
-                    this.size = 2 + Math.random() * 3;
-                }
-            }
-            update() {
-                this.x += this.vx; this.y += this.vy;
-                if (this.type === 'smoke') { this.vx *= 0.95; this.vy *= 0.95; this.size += 0.06; }
-                else if (this.type === 'flash') { this.colorPhase = Math.min(1, this.colorPhase + 0.15); }
-                else { this.vy += 0.25; }
-                this.life -= this.decay;
-                return this.life > 0;
-            }
-            draw(ctx) {
-                if (this.type === 'smoke') {
-                    ctx.fillStyle = `rgba(140, 140, 140, ${this.life * 0.6})`;
-                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
-                } else if (this.type === 'flash') {
-                    const r = 255, g = Math.floor(255 * (1 - this.colorPhase));
-                    ctx.fillStyle = `rgba(${r}, ${g}, ${g}, ${this.life})`;
-                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size * this.life, 0, Math.PI * 2); ctx.fill();
-                } else {
-                    ctx.fillStyle = `rgba(255, ${Math.floor(100 * this.life)}, 0, ${this.life})`;
-                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
-                }
-            }
-        }
-        
-        class WindageParticle {
-            constructor(cx, cy, angle, speed) {
-                this.x = cx; this.y = cy;
-                this.vx = Math.cos(angle) * speed;
-                this.vy = Math.sin(angle) * speed;
-                this.life = 1.0; this.decay = 0.02 + Math.random() * 0.01;
-                this.size = 1.5 + Math.random() * 1.5;
-            }
-            update() {
-                this.x += this.vx; this.y += this.vy;
-                this.vy += 0.15;
-                this.life -= this.decay;
-                if (this.y > oilSystem.panBottomY) return false;
-                return this.life > 0;
-            }
-            draw(ctx) {
-                ctx.fillStyle = `rgba(0, 0, 0, ${this.life * 0.6})`;
-                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
-            }
-        }
-        
-        class DrainbackParticle {
-            constructor(x, y) {
-                this.x = x + (Math.random() - 0.5) * 20;
-                this.y = y;
-                this.vx = (Math.random() - 0.5) * 0.5;
-                this.vy = 0.5 + Math.random() * 1;
-                this.life = 1.0; this.decay = 0.008;
-                this.size = 2 + Math.random() * 2;
-            }
-            update() {
-                this.x += this.vx; this.y += this.vy;
-                this.vy += 0.1;
-                this.life -= this.decay;
-                if (this.y > oilSystem.panBottomY) return false;
-                return this.life > 0;
-            }
-            draw(ctx) {
-                ctx.fillStyle = `rgba(0, 0, 0, ${this.life * 0.5})`;
-                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
-            }
-        }
-        
-        class AirBubble {
-            constructor(x, y) {
-                this.x = x + (Math.random() - 0.5) * (oilSystem.pickupWidth * 0.6);
-                this.y = y;
-                this.vy = -0.8 - Math.random() * 1;
-                this.life = 1.0; this.decay = 0.025;
-                this.size = 1 + Math.random() * 1.5;
-            }
-            update() {
-                this.y += this.vy;
-                this.x += Math.sin(this.y * 0.15) * 0.3;
-                this.life -= this.decay;
-                return this.life > 0 && this.y > oilSystem.pumpY;
-            }
-            draw(ctx) {
-                ctx.fillStyle = `rgba(255, 255, 255, ${this.life * 0.9})`;
-                ctx.strokeStyle = `rgba(180, 180, 180, ${this.life * 0.7})`;
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-            }
-        }
-        
-        // ==================== CYLINDER CLASS ====================
-        class Cylinder {
-            constructor(x, y, angle, phaseOffset, bank, index) {
-                this.x = x; this.y = y;
-                this.baseAngle = angle; this.angle = angle;
-                this.phaseOffset = phaseOffset;
-                this.bank = bank; this.index = index;
-                this.pistonPos = 0; this.prevPistonPos = 0;
-                this.pistonWarpAngle = 0;
-                this.intakeValveOpen = 0; this.exhaustValveOpen = 0;
-                this.strokePhase = 0;
-            }
-            update(crankAngle, rpmReductionPercent) {
-                const adjustedAngle = (crankAngle + this.phaseOffset) % 720;
-                this.prevPistonPos = this.pistonPos;
-                this.pistonPos = Math.sin((adjustedAngle * Math.PI) / 360) * 35;
-                this.strokePhase = Math.floor(adjustedAngle / 180);
-                this.pistonWarpAngle = 10 * (rpmReductionPercent / 100) * ((this.index % 2 === 0) ? 1 : -1);
-                this.angle = this.baseAngle;
-                this.intakeValveOpen = adjustedAngle < 180 ? Math.sin((adjustedAngle * Math.PI) / 180) * 12 : 0;
-                this.exhaustValveOpen = adjustedAngle >= 540 ? Math.sin(((adjustedAngle - 540) * Math.PI) / 180) * 12 : 0;
-            }
-            draw(ctx, engineState) {
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                ctx.rotate((this.angle * Math.PI) / 180);
-                const damageShake = engineState.damageStage > 2 ? (Math.random() - 0.5) * engineState.damageStage * 1.5 : 0;
-                const frictionLevel = engineState.friction, lubeLevel = engineState.lubrication, damageLevel = engineState.damageStage;
-                let strokeColor = '#000', fillColor = '#fff', pistonFillColor = '#fff';
-                if (frictionLevel > 70) pistonFillColor = `rgb(255, ${Math.floor(255 - (frictionLevel - 70) / 30 * 200)}, ${Math.floor(255 - (frictionLevel - 70) / 30 * 200)})`;
-                if (damageLevel >= 4) { strokeColor = '#880000'; fillColor = '#ffeeee'; }
-                else if (damageLevel >= 2) { strokeColor = '#aa0000'; fillColor = '#fff8f8'; }
+            c.strokeStyle = stroke; c.lineWidth = 1.5;
+            for (let i = 0; i < 3; i++) { c.beginPath(); c.moveTo(-25, -9 + i * 8); c.lineTo(25, -9 + i * 8); c.stroke(); }
+            c.fillStyle = fill; c.beginPath(); c.arc(0, 8, 5, 0, Math.PI * 2); c.fill(); c.stroke();
+            c.restore();
+            
+            c.lineWidth = 8; c.strokeStyle = fill;
+            c.beginPath(); c.moveTo(shake, this.pistonPos + 22); c.lineTo(shake, 68); c.stroke();
+            c.lineWidth = 6; c.strokeStyle = stroke;
+            c.beginPath(); c.moveTo(shake, this.pistonPos + 22); c.lineTo(shake, 68); c.stroke();
+            
+            // FRICTION PARTICLES: smoke effects from piston friction
+            const pistonMoving = Math.abs(this.pistonPos - this.prevPistonPos) > 0.5;
+            if (pistonMoving && fric > TUNING.friction.smokeStart) {
+                const intensity = (fric - TUNING.friction.smokeStart) / (100 - TUNING.friction.smokeStart);
+                const rad = (this.baseAngle * Math.PI) / 180;
                 
-                ctx.strokeStyle = strokeColor; ctx.fillStyle = fillColor; ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.rect(-30 + damageShake, -90, 60, 130); ctx.fill(); ctx.stroke();
-                ctx.beginPath(); ctx.rect(-35 + damageShake, -105, 70, 20); ctx.fill(); ctx.stroke();
-                ctx.fillStyle = frictionLevel > 60 ? '#fff0f0' : '#f5f5f5';
-                ctx.beginPath(); ctx.rect(-25 + damageShake, -85, 50, 15); ctx.fill(); ctx.stroke();
-                ctx.fillStyle = fillColor;
-                ctx.beginPath(); ctx.rect(-20 + damageShake, -100 + this.intakeValveOpen, 6, 20); ctx.fill(); ctx.stroke();
-                ctx.beginPath(); ctx.ellipse(-17 + damageShake, -100 + this.intakeValveOpen, 8, 3, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-                ctx.beginPath(); ctx.rect(14 + damageShake, -100 + this.exhaustValveOpen, 6, 20); ctx.fill(); ctx.stroke();
-                ctx.beginPath(); ctx.ellipse(17 + damageShake, -100 + this.exhaustValveOpen, 8, 3, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-                
-                const pistonY = this.pistonPos;
-                ctx.save();
-                ctx.translate(damageShake, pistonY + 7);
-                ctx.rotate((this.pistonWarpAngle * Math.PI) / 180);
-                ctx.fillStyle = pistonFillColor; ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.rect(-25, -15, 50, 30); ctx.fill(); ctx.stroke();
-                const lubeFactor = Math.max(0, (lubeLevel - 30) / 70);
-                if (lubeFactor > 0.02) {
-                    ctx.strokeStyle = `rgba(0, 0, 0, ${Math.pow(lubeFactor, 1.5)})`;
-                    ctx.lineWidth = 2 + lubeFactor * 4; ctx.lineCap = 'round';
-                    ctx.beginPath(); ctx.moveTo(-25, -12); ctx.lineTo(-25, 11); ctx.stroke();
-                    ctx.beginPath(); ctx.moveTo(25, -12); ctx.lineTo(25, 11); ctx.stroke();
-                }
-                ctx.strokeStyle = strokeColor; ctx.lineWidth = 1.5;
-                for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(-25, -9 + i * 8); ctx.lineTo(25, -9 + i * 8); ctx.stroke(); }
-                ctx.fillStyle = fillColor; ctx.beginPath(); ctx.arc(0, 8, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-                ctx.restore();
-                
-                ctx.lineWidth = 8; ctx.strokeStyle = fillColor;
-                ctx.beginPath(); ctx.moveTo(damageShake, pistonY + 22); ctx.lineTo(damageShake, 68); ctx.stroke();
-                ctx.lineWidth = 6; ctx.strokeStyle = strokeColor;
-                ctx.beginPath(); ctx.moveTo(damageShake, pistonY + 22); ctx.lineTo(damageShake, 68); ctx.stroke();
-                
-                if (frictionLevel > 60) {
-                    const pistonMoving = Math.abs(this.pistonPos - this.prevPistonPos) > 0.5;
-                    const intensity = (frictionLevel - 60) / 40;
-                    if (pistonMoving) {
-                        for (let s = 0; s < 10; s++) {
-                            if (Math.random() < intensity * 0.8) {
-                                const side = Math.random() > 0.5 ? -25 : 25;
-                                const sy = pistonY + (Math.random() - 0.5) * 28;
-                                const rad = (this.angle * Math.PI) / 180;
-                                engine.frictionParticles.push(new FrictionParticle(
-                                    this.x + side * Math.cos(rad) - sy * Math.sin(rad),
-                                    this.y + side * Math.sin(rad) + sy * Math.cos(rad), 'smoke'));
-                            }
-                        }
+                // Spawn smoke particles at piston edges
+                for (let s = 0; s < 10; s++) {
+                    if (Math.random() < intensity * 0.8) {
+                        const side = Math.random() > 0.5 ? -25 : 25;
+                        const sy = this.pistonPos + (Math.random() - 0.5) * 28;
+                        const worldX = this.x + side * Math.cos(rad) - sy * Math.sin(rad);
+                        const worldY = this.y + side * Math.sin(rad) + sy * Math.cos(rad);
+                        state.particles.push(createParticle('smoke', worldX, worldY));
                     }
                 }
-                
-                const strokeNames = ['IN', 'COMP', 'PWR', 'EXH'];
-                ctx.fillStyle = strokeColor; ctx.font = 'bold 9px Helvetica'; ctx.textAlign = 'center';
-                ctx.fillText(strokeNames[this.strokePhase], damageShake, -112);
-                ctx.restore();
             }
+            
+            const names = ['IN', 'COMP', 'PWR', 'EXH'];
+            c.fillStyle = stroke; c.font = 'bold 9px Helvetica'; c.textAlign = 'center';
+            c.fillText(names[this.strokePhase], shake, -112);
+            c.restore();
         }
-        
-        const cylinders = [
-            new Cylinder(320, 215, -30, 0, 'left', 0),
-            new Cylinder(480, 215, -30, 240, 'left', 1),
-            new Cylinder(640, 215, -30, 480, 'left', 2),
-            new Cylinder(400, 215, 30, 120, 'right', 3),
-            new Cylinder(560, 215, 30, 360, 'right', 4),
-            new Cylinder(720, 215, 30, 600, 'right', 5),
-        ];
-        
-        // ==================== DRAWING FUNCTIONS ====================
-        function drawEngineBlock(ctx) {
-            const d = engine.damageStage;
-            let strokeColor = '#000', fillColor = '#fff';
-            if (d >= 4) { strokeColor = '#880000'; fillColor = '#fff5f5'; }
-            else if (d >= 2) { strokeColor = '#aa4444'; }
-            ctx.strokeStyle = strokeColor; ctx.fillStyle = fillColor; ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(250, 320); ctx.lineTo(280, 150); ctx.lineTo(520, 115);
-            ctx.lineTo(760, 150); ctx.lineTo(790, 320); ctx.lineTo(790, 365);
-            ctx.lineTo(250, 365); ctx.closePath();
-            ctx.fill(); ctx.stroke();
-            ctx.fillStyle = d >= 3 ? '#fff0f0' : '#f8f8f8';
-            ctx.beginPath();
-            ctx.moveTo(400, 175); ctx.lineTo(520, 145); ctx.lineTo(640, 175);
-            ctx.lineTo(640, 250); ctx.lineTo(400, 250); ctx.closePath();
-            ctx.fill(); ctx.stroke();
-        }
-        
-        function drawCrankshaft(ctx, angle) {
-            const centerX = 520, centerY = 345, d = engine.damageStage;
+    }
+
+    const cylinders = [
+        new Cylinder(320, 215, -30, 0, 0), new Cylinder(480, 215, -30, 240, 1), new Cylinder(640, 215, -30, 480, 2),
+        new Cylinder(400, 215, 30, 120, 3), new Cylinder(560, 215, 30, 360, 4), new Cylinder(720, 215, 30, 600, 5)
+    ];
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // DRAW MODULE
+    // ════════════════════════════════════════════════════════════════════════════
+    const Draw = {
+        engineBlock(c) {
+            const d = state.damageStage;
+            const stroke = d >= 4 ? '#880000' : d >= 2 ? '#aa4444' : '#000';
+            const fill = d >= 4 ? '#fff5f5' : '#fff';
+            c.strokeStyle = stroke; c.fillStyle = fill; c.lineWidth = 3;
+            c.beginPath();
+            c.moveTo(250, 320); c.lineTo(280, 150); c.lineTo(520, 115);
+            c.lineTo(760, 150); c.lineTo(790, 320); c.lineTo(790, 365);
+            c.lineTo(250, 365); c.closePath();
+            c.fill(); c.stroke();
+            c.fillStyle = d >= 3 ? '#fff0f0' : '#f8f8f8';
+            c.beginPath();
+            c.moveTo(400, 175); c.lineTo(520, 145); c.lineTo(640, 175);
+            c.lineTo(640, 250); c.lineTo(400, 250); c.closePath();
+            c.fill(); c.stroke();
+        },
+
+        crankshaft(c, angle) {
+            const cx = 520, cy = 345, d = state.damageStage;
             const shake = d > 2 ? (Math.random() - 0.5) * d * 2 : 0;
-            let strokeColor = d >= 4 ? '#880000' : d >= 2 ? '#aa4444' : '#000';
-            ctx.save();
-            ctx.translate(centerX + shake, centerY);
-            ctx.rotate((angle * Math.PI) / 180);
-            ctx.strokeStyle = strokeColor; ctx.fillStyle = '#fff'; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.arc(0, 0, 28, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-            ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.stroke();
+            const stroke = d >= 4 ? '#880000' : d >= 2 ? '#aa4444' : '#000';
+            
+            c.save();
+            c.translate(cx + shake, cy);
+            c.rotate((angle * Math.PI) / 180);
+            c.strokeStyle = stroke; c.fillStyle = '#fff'; c.lineWidth = 2;
+            c.beginPath(); c.arc(0, 0, 28, 0, Math.PI * 2); c.fill(); c.stroke();
+            c.beginPath(); c.arc(0, 0, 14, 0, Math.PI * 2); c.stroke();
+            
             for (let i = 0; i < 6; i++) {
                 const ta = (i * 60 + 30) * Math.PI / 180;
                 const tx = Math.cos(ta) * 45, ty = Math.sin(ta) * 45;
-                ctx.lineWidth = 10; ctx.strokeStyle = '#fff';
-                ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(tx * 0.75, ty * 0.75); ctx.stroke();
-                ctx.lineWidth = 8; ctx.strokeStyle = strokeColor;
-                ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(tx * 0.75, ty * 0.75); ctx.stroke();
-                ctx.fillStyle = '#fff';
-                ctx.beginPath(); ctx.arc(tx, ty, 10, 0, Math.PI * 2); ctx.fill();
-                ctx.lineWidth = 2; ctx.stroke();
+                c.lineWidth = 10; c.strokeStyle = '#fff';
+                c.beginPath(); c.moveTo(0, 0); c.lineTo(tx * 0.75, ty * 0.75); c.stroke();
+                c.lineWidth = 8; c.strokeStyle = stroke;
+                c.beginPath(); c.moveTo(0, 0); c.lineTo(tx * 0.75, ty * 0.75); c.stroke();
+                c.fillStyle = '#fff';
+                c.beginPath(); c.arc(tx, ty, 10, 0, Math.PI * 2); c.fill();
+                c.lineWidth = 2; c.stroke();
             }
-            ctx.restore();
+            c.restore();
             
-            if (engine.lubrication > 20 && engine.isRunning) {
-                const rpmFactor = engine.rpm / 3000;
-                if (Math.random() < 0.3 * rpmFactor) {
-                    const ta = (angle * Math.PI / 180) + Math.random() * Math.PI * 2;
-                    const sp = 2 + Math.random() * 3 * rpmFactor;
-                    const sd = 35 + Math.random() * 15;
-                    engine.windageParticles.push(new WindageParticle(centerX + Math.cos(ta) * sd, centerY + Math.sin(ta) * sd, ta, sp));
-                }
+            if (state.lubrication > 20 && state.isRunning && Math.random() < 0.3 * state.rpm / TUNING.damage.baseRpm) {
+                const ta = (angle * Math.PI / 180) + Math.random() * Math.PI * 2;
+                const sp = 2 + Math.random() * 3 * state.rpm / TUNING.damage.baseRpm;
+                const sd = 35 + Math.random() * 15;
+                state.particles.push(createParticle('windage', cx + Math.cos(ta) * sd, cy + Math.sin(ta) * sd, ta, sp));
             }
-        }
-        
-        function drawOilPan(ctx) {
-            const { panX, panY, panWidth, panHeight } = oilSystem;
-            const oilLevel = engine.oilLevel, isLow = oilLevel < 10;
-            ctx.strokeStyle = isLow ? '#cc0000' : '#000';
-            ctx.fillStyle = '#fff'; ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(panX, panY);
-            ctx.lineTo(panX + 30, panY + panHeight);
-            ctx.lineTo(panX + panWidth - 30, panY + panHeight);
-            ctx.lineTo(panX + panWidth, panY);
-            ctx.closePath();
-            ctx.fill(); ctx.stroke();
+        },
+
+        oilPan(c) {
+            const { panX: px, panY: py, panW: pw, panH: ph } = oilGeom;
+            const { oilLevel: oil } = state;
+            const low = oil < TUNING.oil.critical;
             
-            const critY = panY + panHeight - ((10 / 100) * (panHeight - 12)) - 5;
-            ctx.strokeStyle = '#cc0000'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]);
-            ctx.beginPath(); ctx.moveTo(panX + 40, critY); ctx.lineTo(panX + panWidth - 40, critY); ctx.stroke();
-            ctx.setLineDash([]);
+            c.strokeStyle = low ? '#cc0000' : '#000';
+            c.fillStyle = '#fff'; c.lineWidth = 3;
+            c.beginPath();
+            c.moveTo(px, py); c.lineTo(px + 30, py + ph); c.lineTo(px + pw - 30, py + ph); c.lineTo(px + pw, py);
+            c.closePath(); c.fill(); c.stroke();
             
-            const maxH = panHeight - 12, oilH = (oilLevel / 100) * maxH;
+            const critY = py + ph - ((TUNING.oil.critical / 100) * (ph - 12)) - 5;
+            c.strokeStyle = '#cc0000'; c.lineWidth = 1.5; c.setLineDash([4, 4]);
+            c.beginPath(); c.moveTo(px + 40, critY); c.lineTo(px + pw - 40, critY); c.stroke();
+            c.setLineDash([]);
+            
+            const maxH = ph - 12, oilH = (oil / 100) * maxH;
             if (oilH > 0) {
-                ctx.fillStyle = isLow ? '#cc0000' : '#000';
-                const oilY = panY + panHeight - oilH - 5;
-                const inset = 30 * (1 - oilH / panHeight);
-                ctx.beginPath();
-                ctx.moveTo(panX + 35 + inset, oilY);
-                ctx.lineTo(panX + panWidth - 35 - inset, oilY);
-                ctx.lineTo(panX + panWidth - 35, panY + panHeight - 5);
-                ctx.lineTo(panX + 35, panY + panHeight - 5);
-                ctx.closePath();
-                ctx.fill();
-                ctx.strokeStyle = isLow ? '#ff6666' : '#333'; ctx.lineWidth = 1;
+                c.fillStyle = low ? '#cc0000' : '#000';
+                const oilY = py + ph - oilH - 5;
+                const inset = 30 * (1 - oilH / ph);
+                c.beginPath();
+                c.moveTo(px + 35 + inset, oilY); c.lineTo(px + pw - 35 - inset, oilY);
+                c.lineTo(px + pw - 35, py + ph - 5); c.lineTo(px + 35, py + ph - 5);
+                c.closePath(); c.fill();
+                
+                c.strokeStyle = low ? '#ff6666' : '#333'; c.lineWidth = 1;
                 const time = Date.now() / 400;
-                ctx.beginPath();
-                for (let x = panX + 40; x < panX + panWidth - 40; x += 3) {
+                c.beginPath();
+                for (let x = px + 40; x < px + pw - 40; x += 3) {
                     const wy = oilY + Math.sin(x / 15 + time) * 2;
-                    if (x === panX + 40) ctx.moveTo(x, wy); else ctx.lineTo(x, wy);
+                    x === px + 40 ? c.moveTo(x, wy) : c.lineTo(x, wy);
                 }
-                ctx.stroke();
+                c.stroke();
             }
-            ctx.fillStyle = '#000'; ctx.font = '10px Helvetica'; ctx.textAlign = 'left';
-            ctx.fillText('F', panX + panWidth + 10, panY + 15);
-            ctx.fillText('E', panX + panWidth + 10, panY + panHeight - 5);
-            ctx.fillStyle = '#fff'; ctx.strokeStyle = isLow ? '#cc0000' : '#000'; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.arc(panX + panWidth / 2, panY + panHeight, 6, 0, Math.PI * 2);
-            ctx.fill(); ctx.stroke();
-        }
-        
-        function drawOilPumpAndPickup(ctx) {
-            const { pickupX, pickupTopY, pickupBottomY, pickupWidth, pickupScreenWidth, pumpX, pumpY, pumpWidth, pumpHeight, panY, panHeight } = oilSystem;
-            const oilLevel = engine.oilLevel, isLow = oilLevel < 10;
-            const isFlowing = oilLevel >= 10 && engine.lubrication > 10;
-            const flowAlpha = Math.min(1, engine.lubrication / 50);
             
-            const maxH = panHeight - 12, oilH = (oilLevel / 100) * maxH;
-            const oilSurfaceY = panY + panHeight - oilH - 5;
-            const pickupScreenY = pickupBottomY - 8;
-            engine.pumpSuckingAir = pickupScreenY < oilSurfaceY;
+            c.fillStyle = '#000'; c.font = '10px Helvetica'; c.textAlign = 'left';
+            c.fillText('F', px + pw + 10, py + 15);
+            c.fillText('E', px + pw + 10, py + ph - 5);
             
-            // Pickup tube with animated UPWARD flow or gray when not flowing
-            if (isFlowing) {
-                drawAnimatedPickupTube(ctx, pickupX, pumpY + pumpHeight, pickupBottomY - 15, pickupWidth, flowAlpha);
+            c.fillStyle = '#fff'; c.strokeStyle = low ? '#cc0000' : '#000'; c.lineWidth = 2;
+            c.beginPath(); c.arc(px + pw / 2, py + ph, 6, 0, Math.PI * 2); c.fill(); c.stroke();
+        },
+
+        pumpAndPickup(c) {
+            const { pickupX: pkX, pickupBottom: pkB, pickupW: pkW, screenW, pumpX, pumpY, pumpW, pumpH, panY, panH } = oilGeom;
+            const { oilLevel: oil, lubrication: lube, isRunning } = state;
+            const low = oil < TUNING.oil.critical;
+            const flowing = oil >= TUNING.oil.critical && lube > 10;
+            const alpha = Math.min(1, lube / 50);
+            
+            const maxH = panH - 12, oilH = (oil / 100) * maxH;
+            const oilSurfaceY = panY + panH - oilH - 5;
+            state.pumpSuckingAir = (pkB - 8) < oilSurfaceY;
+            
+            if (flowing) {
+                this.animatedTube(c, pkX, pumpY + pumpH, pkB - 15, pkW, alpha);
             } else {
-                ctx.strokeStyle = 'rgba(150, 150, 150, 0.6)';
-                ctx.lineWidth = pickupWidth;
-                ctx.lineCap = 'round';
-                ctx.beginPath();
-                ctx.moveTo(pickupX, pumpY + pumpHeight);
-                ctx.lineTo(pickupX, pickupBottomY - 15);
-                ctx.stroke();
+                c.strokeStyle = 'rgba(150,150,150,0.6)';
+                c.lineWidth = pkW; c.lineCap = 'round';
+                c.beginPath(); c.moveTo(pkX, pumpY + pumpH); c.lineTo(pkX, pkB - 15); c.stroke();
             }
             
-            // Pickup screen
-            ctx.fillStyle = '#fff';
-            ctx.strokeStyle = isLow ? '#cc0000' : '#000';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.roundRect(pickupX - pickupScreenWidth/2, pickupBottomY - 15, pickupScreenWidth, 12, 3);
-            ctx.fill(); ctx.stroke();
-            ctx.strokeStyle = isLow ? '#ffaaaa' : '#999'; ctx.lineWidth = 0.5;
-            for (let x = pickupX - pickupScreenWidth/2 + 3; x < pickupX + pickupScreenWidth/2 - 3; x += 4) {
-                ctx.beginPath(); ctx.moveTo(x, pickupBottomY - 13); ctx.lineTo(x, pickupBottomY - 5); ctx.stroke();
+            c.fillStyle = '#fff'; c.strokeStyle = low ? '#cc0000' : '#000'; c.lineWidth = 2;
+            c.beginPath(); c.roundRect(pkX - screenW/2, pkB - 15, screenW, 12, 3); c.fill(); c.stroke();
+            c.strokeStyle = low ? '#ffaaaa' : '#999'; c.lineWidth = 0.5;
+            for (let x = pkX - screenW/2 + 3; x < pkX + screenW/2 - 3; x += 4) {
+                c.beginPath(); c.moveTo(x, pkB - 13); c.lineTo(x, pkB - 5); c.stroke();
             }
             
-            // Oil pump
-            ctx.fillStyle = '#fff';
-            ctx.strokeStyle = isLow ? '#cc0000' : '#000';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.roundRect(pumpX, pumpY, pumpWidth, pumpHeight, 4);
-            ctx.fill(); ctx.stroke();
-            ctx.fillStyle = isLow ? '#cc0000' : '#000';
-            ctx.font = 'bold 8px Helvetica'; ctx.textAlign = 'center';
-            ctx.fillText('OIL', pumpX + pumpWidth/2, pumpY + 14);
-            ctx.fillText('PUMP', pumpX + pumpWidth/2, pumpY + 24);
+            c.fillStyle = '#fff'; c.strokeStyle = low ? '#cc0000' : '#000'; c.lineWidth = 2;
+            c.beginPath(); c.roundRect(pumpX, pumpY, pumpW, pumpH, 4); c.fill(); c.stroke();
+            c.fillStyle = low ? '#cc0000' : '#000';
+            c.font = 'bold 8px Helvetica'; c.textAlign = 'center';
+            c.fillText('OIL', pumpX + pumpW/2, pumpY + 14);
+            c.fillText('PUMP', pumpX + pumpW/2, pumpY + 24);
             
-            // "SUCKING AIR" warning text - appears at 15% oil level, all on one line
-            if (oilLevel < 15 && engine.isRunning) {
-                if (engine.suckingAirFlashOn) {
-                    ctx.fillStyle = '#cc0000';
-                    ctx.font = 'bold 8px Helvetica';
-                    ctx.textAlign = 'left';
-                    ctx.fillText('SUCKING AIR', pickupX + 20, pickupBottomY - 18);
-                }
+            if (oil < TUNING.oil.suckingAir && isRunning && blink()) {
+                c.fillStyle = '#cc0000';
+                c.font = 'bold 8px Helvetica';
+                c.textAlign = 'left';
+                c.fillText('SUCKING AIR', pkX + 20, pkB - 18);
             }
             
-            // Air bubbles - linear rate from 25% (few) to 10% (many)
-            // No bubbles below 10%
-            if (engine.pumpSuckingAir && engine.isRunning && oilLevel >= 10 && oilLevel <= 25) {
-                // Linear interpolation: at 25% -> 0.05 chance, at 10% -> 0.5 chance
-                const bubbleRate = 0.05 + (25 - oilLevel) / 15 * 0.45;
-                if (Math.random() < bubbleRate) {
-                    oilSystem.airBubbles.push(new AirBubble(pickupX, pickupBottomY - 20));
-                }
+            const bubbleEligible = state.pumpSuckingAir && isRunning && oil >= TUNING.oil.critical && oil <= TUNING.oil.bubbleStart;
+            const bubbleRate = bubbleEligible ? 0.05 + (TUNING.oil.bubbleStart - oil) / 15 * 0.45 : 0;
+            if (Math.random() < bubbleRate) {
+                state.particles.push(createParticle('bubble', pkX, pkB - 20));
             }
-        }
-        
-        function drawAnimatedPickupTube(ctx, x, topY, bottomY, width, alpha) {
-            const segmentLength = 20;
+        },
+
+        animatedTube(c, x, topY, bottomY, width, alpha) {
+            c.strokeStyle = `rgba(60,60,60,${alpha})`;
+            c.lineWidth = width; c.lineCap = 'round';
+            c.beginPath(); c.moveTo(x, topY); c.lineTo(x, bottomY); c.stroke();
             
-            // Base tube
-            ctx.strokeStyle = `rgba(60, 60, 60, ${alpha})`;
-            ctx.lineWidth = width;
-            ctx.lineCap = 'round';
-            ctx.beginPath();
-            ctx.moveTo(x, topY);
-            ctx.lineTo(x, bottomY);
-            ctx.stroke();
-            
-            // Animated flow UPWARD - offset increases over time, pulses move from bottom to top
-            const tubeLength = bottomY - topY;
-            const animOffset = engine.galleryFlowOffset;
-            
-            // Draw pulses moving upward
-            for (let d = animOffset % segmentLength; d < tubeLength; d += segmentLength) {
-                // d=0 is at top, so we draw at bottomY - d to place from bottom going up
-                const py = bottomY - d;
-                ctx.fillStyle = `rgba(30, 30, 30, ${alpha * 0.8})`;
-                ctx.beginPath();
-                ctx.arc(x, py, width * 0.4, 0, Math.PI * 2);
-                ctx.fill();
+            const len = bottomY - topY;
+            for (let d = state.galleryFlowOffset % 20; d < len; d += 20) {
+                c.fillStyle = `rgba(30,30,30,${alpha * 0.8})`;
+                c.beginPath(); c.arc(x, bottomY - d, width * 0.4, 0, Math.PI * 2); c.fill();
             }
             
-            // Upward arrow at midpoint
             const midY = (topY + bottomY) / 2;
-            ctx.save();
-            ctx.translate(x, midY);
-            ctx.rotate(-Math.PI / 2); // Point up
-            ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.9})`;
-            ctx.beginPath();
-            ctx.moveTo(6, 0);
-            ctx.lineTo(-3, -4);
-            ctx.lineTo(-3, 4);
-            ctx.closePath();
-            ctx.fill();
-            ctx.restore();
-        }
-        
-        function drawOilGalleries(ctx) {
-            const { mainGalleryY, mainGalleryLeft, mainGalleryRight, cylinderFeeds, feedTopY, pumpX, pumpWidth, pumpY } = oilSystem;
-            const isFlowing = engine.oilLevel >= 10 && engine.lubrication > 10;
-            const flowAlpha = Math.min(1, engine.lubrication / 50);
+            c.save();
+            c.translate(x, midY);
+            c.rotate(-Math.PI / 2);
+            c.fillStyle = `rgba(255,255,255,${alpha * 0.9})`;
+            c.beginPath(); c.moveTo(6, 0); c.lineTo(-3, -4); c.lineTo(-3, 4); c.closePath(); c.fill();
+            c.restore();
+        },
+
+        galleries(c) {
+            const { galleryY: gy, galleryLeft: gl, galleryRight: gr, feeds, feedTop, pumpX, pumpW, pumpY } = oilGeom;
+            const flowing = state.oilLevel >= TUNING.oil.critical && state.lubrication > 10;
+            const alpha = Math.min(1, state.lubrication / 50);
             
-            if (isFlowing && engine.isRunning) {
-                engine.galleryFlowOffset = (engine.galleryFlowOffset + 3) % 30;
-            }
+            if (flowing && state.isRunning) state.galleryFlowOffset = (state.galleryFlowOffset + 3) % 30;
             
-            const galleryWidth = isFlowing ? 6 : 4;
+            const gw = flowing ? 6 : 4;
             
-            if (isFlowing) {
-                drawAnimatedGallery(ctx, 
-                    [{x: pumpX + pumpWidth, y: pumpY + 10}, {x: pumpX + pumpWidth + 20, y: mainGalleryY}, {x: mainGalleryRight, y: mainGalleryY}],
-                    galleryWidth, flowAlpha, true);
-                drawAnimatedGallery(ctx,
-                    [{x: mainGalleryLeft, y: mainGalleryY}, {x: pumpX + pumpWidth + 20, y: mainGalleryY}],
-                    galleryWidth, flowAlpha, false);
+            if (flowing) {
+                this.animatedGallery(c, [{x: pumpX + pumpW, y: pumpY + 10}, {x: pumpX + pumpW + 20, y: gy}, {x: gr, y: gy}], gw, alpha, true);
+                this.animatedGallery(c, [{x: gl, y: gy}, {x: pumpX + pumpW + 20, y: gy}], gw, alpha, false);
             } else {
-                ctx.strokeStyle = `rgba(150, 150, 150, 0.4)`;
-                ctx.lineWidth = galleryWidth; ctx.lineCap = 'round';
-                ctx.beginPath();
-                ctx.moveTo(pumpX + pumpWidth, pumpY + 10);
-                ctx.lineTo(pumpX + pumpWidth + 20, mainGalleryY);
-                ctx.lineTo(mainGalleryRight, mainGalleryY);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(mainGalleryLeft, mainGalleryY);
-                ctx.lineTo(pumpX + pumpWidth + 20, mainGalleryY);
-                ctx.stroke();
+                c.strokeStyle = 'rgba(150,150,150,0.4)'; c.lineWidth = gw; c.lineCap = 'round';
+                c.beginPath(); c.moveTo(pumpX + pumpW, pumpY + 10); c.lineTo(pumpX + pumpW + 20, gy); c.lineTo(gr, gy); c.stroke();
+                c.beginPath(); c.moveTo(gl, gy); c.lineTo(pumpX + pumpW + 20, gy); c.stroke();
             }
             
-            cylinderFeeds.forEach((feedX) => {
-                if (isFlowing) {
-                    drawAnimatedGallery(ctx,
-                        [{x: feedX, y: mainGalleryY}, {x: feedX, y: feedTopY}],
-                        galleryWidth - 1, flowAlpha, true);
-                    ctx.fillStyle = `rgba(0, 0, 0, ${flowAlpha * 0.6})`;
-                    ctx.beginPath(); ctx.arc(feedX, feedTopY, 5, 0, Math.PI * 2); ctx.fill();
+            feeds.forEach(fx => {
+                if (flowing) {
+                    this.animatedGallery(c, [{x: fx, y: gy}, {x: fx, y: feedTop}], gw - 1, alpha, true);
+                    c.fillStyle = `rgba(0,0,0,${alpha * 0.6})`;
+                    c.beginPath(); c.arc(fx, feedTop, 5, 0, Math.PI * 2); c.fill();
                 } else {
-                    ctx.strokeStyle = `rgba(150, 150, 150, 0.4)`;
-                    ctx.lineWidth = galleryWidth - 1;
-                    ctx.beginPath(); ctx.moveTo(feedX, mainGalleryY); ctx.lineTo(feedX, feedTopY); ctx.stroke();
+                    c.strokeStyle = 'rgba(150,150,150,0.4)'; c.lineWidth = gw - 1;
+                    c.beginPath(); c.moveTo(fx, gy); c.lineTo(fx, feedTop); c.stroke();
                 }
             });
             
-            if (isFlowing && engine.isRunning && Math.random() < 0.1) {
-                const feedX = cylinderFeeds[Math.floor(Math.random() * cylinderFeeds.length)];
-                engine.drainbackParticles.push(new DrainbackParticle(feedX, feedTopY + 50));
+            if (flowing && state.isRunning && Math.random() < 0.1) {
+                const fx = feeds[Math.floor(Math.random() * feeds.length)];
+                state.particles.push(createParticle('drainback', fx, feedTop + 50));
             }
-        }
-        
-        function drawAnimatedGallery(ctx, points, width, alpha, showArrows) {
-            const segmentLength = 30, offset = engine.galleryFlowOffset;
-            ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-            ctx.strokeStyle = `rgba(60, 60, 60, ${alpha})`;
-            ctx.lineWidth = width;
-            ctx.beginPath();
-            ctx.moveTo(points[0].x, points[0].y);
-            for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
-            ctx.stroke();
+        },
+
+        animatedGallery(c, pts, width, alpha, arrows) {
+            c.lineCap = 'round'; c.lineJoin = 'round';
+            c.strokeStyle = `rgba(60,60,60,${alpha})`; c.lineWidth = width;
+            c.beginPath(); c.moveTo(pts[0].x, pts[0].y);
+            for (let i = 1; i < pts.length; i++) c.lineTo(pts[i].x, pts[i].y);
+            c.stroke();
             
-            for (let i = 1; i < points.length; i++) {
-                const p1 = points[i-1], p2 = points[i];
+            const off = state.galleryFlowOffset;
+            for (let i = 1; i < pts.length; i++) {
+                const p1 = pts[i-1], p2 = pts[i];
                 const dx = p2.x - p1.x, dy = p2.y - p1.y;
-                const segDist = Math.sqrt(dx*dx + dy*dy);
+                const dist = Math.sqrt(dx*dx + dy*dy);
                 const angle = Math.atan2(dy, dx);
-                for (let d = (offset % segmentLength); d < segDist; d += segmentLength) {
-                    const t = d / segDist;
-                    ctx.fillStyle = `rgba(30, 30, 30, ${alpha * 0.8})`;
-                    ctx.beginPath();
-                    ctx.arc(p1.x + dx * t, p1.y + dy * t, width * 0.4, 0, Math.PI * 2);
-                    ctx.fill();
+                
+                for (let d = off % 30; d < dist; d += 30) {
+                    const t = d / dist;
+                    c.fillStyle = `rgba(30,30,30,${alpha * 0.8})`;
+                    c.beginPath(); c.arc(p1.x + dx * t, p1.y + dy * t, width * 0.4, 0, Math.PI * 2); c.fill();
                 }
-                if (showArrows && segDist > 40) {
-                    const midX = p1.x + dx * 0.5, midY = p1.y + dy * 0.5;
-                    ctx.save();
-                    ctx.translate(midX, midY);
-                    ctx.rotate(angle);
-                    ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.9})`;
-                    ctx.beginPath();
-                    ctx.moveTo(6, 0); ctx.lineTo(-3, -4); ctx.lineTo(-3, 4); ctx.closePath();
-                    ctx.fill();
-                    ctx.restore();
+                
+                if (arrows && dist > 40) {
+                    c.save();
+                    c.translate(p1.x + dx * 0.5, p1.y + dy * 0.5);
+                    c.rotate(angle);
+                    c.fillStyle = `rgba(255,255,255,${alpha * 0.9})`;
+                    c.beginPath(); c.moveTo(6, 0); c.lineTo(-3, -4); c.lineTo(-3, 4); c.closePath(); c.fill();
+                    c.restore();
                 }
             }
+        },
+
+        particles(c) {
+            state.particles = state.particles.filter(p => updateParticle(p));
+            state.particles.forEach(p => drawParticle(c, p));
         }
-        
-        function drawParticles(ctx) {
-            engine.frictionParticles = engine.frictionParticles.filter(p => p.update());
-            engine.frictionParticles.forEach(p => p.draw(ctx));
-            engine.windageParticles = engine.windageParticles.filter(p => p.update());
-            engine.windageParticles.forEach(p => p.draw(ctx));
-            engine.drainbackParticles = engine.drainbackParticles.filter(p => p.update());
-            engine.drainbackParticles.forEach(p => p.draw(ctx));
-            oilSystem.airBubbles = oilSystem.airBubbles.filter(b => b.update());
-            oilSystem.airBubbles.forEach(b => b.draw(ctx));
-        }
-        
-        // ==================== ENGINE UPDATE ====================
-        function updateEngine() {
-            if (engine.damageStage >= 5) {
-                engine.isRunning = false; engine.rpm = 0;
-                engine.lubrication = 0; engine.friction = 0;
-            }
-            engine.rpmReductionPercent = engine.damageStage >= 5 ? 100 : Math.round((engine.damageStage * 400) / 3000 * 100);
-            if (engine.isRunning) {
-                engine.crankAngle = (engine.crankAngle + 12 * engine.rpm / 3000) % 720;
-                cylinders.forEach(cyl => cyl.update(engine.crankAngle, engine.rpmReductionPercent));
-            }
-            if (engine.statsFrozen || engine.damageStage >= 5) { updateUI(); return; }
+    };
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // UI MODULE
+    // ════════════════════════════════════════════════════════════════════════════
+    const UI = {
+        updateMeters() {
+            const seized = state.damageStage >= 5;
+            DOM.meters.forEach(el => {
+                const cfg = METERS_CONFIG[el.dataset.meter];
+                const val = seized ? 0 : cfg.getValue();
+                const critical = !seized && (cfg.criticalBelow ? val < cfg.threshold : val > cfg.threshold);
+                
+                el.querySelector('.hud-meter-bar').style.width = val + '%';
+                el.querySelector('.hud-meter-value').textContent = Math.round(val) + '%';
+                
+                [el, el.querySelector('.hud-meter-bar'), el.querySelector('.hud-meter-value')]
+                    .forEach(e => e.classList.toggle('critical', critical));
+            });
+        },
+
+        updateLights() {
+            DOM.lights.forEach(el => el.classList.toggle('active', LIGHTS_CONFIG[el.dataset.light]()));
+        },
+
+        updateOilSlider() {
+            const { oilLevel: oil, countdownActive } = state;
+            const critical = oil < TUNING.oil.critical;
             
-            const effects = damageEffects[engine.damageStage];
-            if (engine.oilLevel >= 10) {
-                engine.lubrication = Math.min(100, engine.lubrication + (100 - engine.lubrication) * 0.03);
+            DOM.oilFill.style.width = oil + '%';
+            DOM.oilBall.style.left = oil + '%';
+            DOM.oilPercent.textContent = Math.round(oil);
+            
+            [DOM.oilFill, DOM.oilBall, DOM.oilPercentage].forEach(e => e.classList.toggle('low', critical));
+            DOM.oilSection.classList.toggle('warning', critical);
+            DOM.oilWarningIcon.style.display = critical ? 'inline' : 'none';
+            DOM.refillOverlay.classList.toggle('active', countdownActive);
+        },
+
+        updateStatus() {
+            const s = STAGE_DATA[state.damageStage];
+            DOM.damageStage.textContent = s.name;
+            DOM.damageStage.className = 'hud-status-stage ' + s.color;
+            DOM.statusText.textContent = s.desc;
+            DOM.damageStage.parentElement.classList.toggle('critical', state.damageStage > 0);
+            
+            DOM.hudProblems.classList.toggle('visible', s.problems.length > 0);
+            DOM.problemsList.innerHTML = s.problems.map(p => `<li><span class="problem-x">✕</span> ${p}</li>`).join('');
+            
+            DOM.conditionText.textContent = s.condition;
+            DOM.conditionText.parentElement.classList.toggle('critical', state.damageStage >= 3);
+            DOM.wrapper.classList.toggle('warning', state.countdownActive || state.damageStage >= 3);
+        },
+
+        updateRPM() {
+            const reduction = state.damageStage >= 5 ? 100 : Math.round((state.damageStage * TUNING.damage.rpmLossPerStage) / TUNING.damage.baseRpm * 100);
+            DOM.rpmValue.textContent = Math.round(state.rpm);
+            DOM.rpmValue.classList.toggle('critical', state.rpm < 2000);
+            DOM.rpmReduction.textContent = reduction > 0 ? `-${reduction}%` : '';
+            DOM.rpmReduction.classList.toggle('visible', reduction > 0);
+        },
+
+        updateProgressBar() {
+            DOM.stageItems.forEach((item, i) => {
+                const isCurrent = i === state.damageStage;
+                const isDamaged = i > 0 && i <= state.damageStage;
+                const isNominalPast = i === 0 && state.damageStage >= 2;
+                item.classList.toggle('current', isCurrent);
+                item.classList.toggle('damaged', isDamaged);
+                item.classList.toggle('nominal-past', isNominalPast);
+            });
+            
+            const currentItem = DOM.stageItems[state.damageStage];
+            if (currentItem) {
+                const itemRect = currentItem.getBoundingClientRect();
+                const barRect = DOM.stageProgressBar.getBoundingClientRect();
+                DOM.stageArrow.style.left = (itemRect.left - barRect.left + itemRect.width / 2) + 'px';
+            }
+        },
+
+        updateAll() {
+            this.updateMeters();
+            this.updateLights();
+            this.updateOilSlider();
+            this.updateStatus();
+            this.updateRPM();
+            this.updateProgressBar();
+        }
+    };
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // INFO POPUP
+    // ════════════════════════════════════════════════════════════════════════════
+    function showInfoPopup(key) {
+        if (state.countdownActive || state.popupVisible) return;
+        const info = INFO_CONTENT[key];
+        if (!info) return;
+        
+        state.infoVisible = true;
+        state.statsFrozen = true;
+        DOM.infoOverlay.classList.remove('damage-mode');
+        DOM.infoTitle.textContent = info.title;
+        DOM.infoStage.style.display = 'none';
+        DOM.infoDescription.innerHTML = info.text;
+        DOM.infoOverlay.classList.add('visible');
+    }
+
+    function showDamagePopup() {
+        state.popupVisible = true;
+        state.statsFrozen = true;
+        DOM.infoOverlay.classList.add('damage-mode');
+        DOM.infoTitle.textContent = '⚠ Engine Damage';
+        DOM.infoStage.style.display = 'block';
+        DOM.infoStage.textContent = `Stage ${state.damageStage + 1}: ${STAGE_DATA[state.damageStage].name}`;
+        DOM.infoDescription.innerHTML = DAMAGE_DESCRIPTIONS[state.damageStage];
+        DOM.infoOverlay.classList.add('visible');
+        DOM.refillOverlay.classList.remove('active');
+        pulse(DOM.warningFlash);
+    }
+
+    function hideInfoOverlay() {
+        DOM.infoOverlay.classList.remove('visible');
+        if (state.popupVisible) {
+            state.popupVisible = false;
+            state.statsFrozen = false;
+            state.graceActive = true;
+            setTimeout(() => {
+                state.graceActive = false;
+                if (state.friction > TUNING.friction.countdownStart && state.damageStage < 5 && !state.countdownActive) startCountdown();
+            }, 2000);
+        } else if (state.infoVisible) {
+            state.infoVisible = false;
+            state.statsFrozen = false;
+        }
+    }
+
+    DOM.infoOverlay.addEventListener('click', hideInfoOverlay);
+    DOM.infoTriggers.forEach(el => el.addEventListener('click', e => { e.stopPropagation(); showInfoPopup(el.dataset.info); }));
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // COUNTDOWN
+    // ════════════════════════════════════════════════════════════════════════════
+    function startCountdown() {
+        state.countdownActive = true;
+        state.countdownValue = 3;
+        if (tutorial.idleActive) hideIdleHint();
+        showCountdownNumber(3);
+        state.countdownTimer = setInterval(() => {
+            if (--state.countdownValue > 0) {
+                showCountdownNumber(state.countdownValue);
             } else {
-                const factor = (10 - engine.oilLevel) / 10;
-                engine.lubrication = Math.max(0, engine.lubrication - ((20 + factor * 13.3) / 60) * effects.lubeLossMult);
+                clearInterval(state.countdownTimer);
+                state.countdownActive = false;
+                DOM.refillOverlay.classList.remove('active');
+                triggerDamage();
             }
-            
-            // Friction builds when lubrication is low
-            if (engine.lubrication < 50) {
-                const factor = (50 - engine.lubrication) / 50;
-                engine.friction = Math.min(100, engine.friction + ((1 + factor * 32) / 60) * effects.frictionMult * (1 + engine.rpm / 3000 * engine.damageStage * 0.1));
-            } else {
-                engine.friction = Math.max(0, engine.friction - engine.friction * (engine.oilLevel >= 50 ? 0.04 : engine.oilLevel >= 10 ? 0.025 : 0.01));
-            }
-            
-            if (engine.isRunning) {
-                const targetRPM = 3000 - engine.damageStage * 400 - (engine.friction > 80 ? 500 : 0);
-                engine.rpm = Math.max(0, engine.rpm + (targetRPM - engine.rpm) * 0.05);
-            }
-            
-            if (engine.friction > 90 && engine.damageStage < 5 && !engine.countdownActive && !engine.damagePopupVisible && !engine.infoPopupVisible && !engine.graceActive) {
-                if (idleHintActive) hideIdleHint();
-                startCountdown();
-            }
-            if (engine.countdownActive && engine.friction < 80) cancelCountdown(true);
-            updateUI();
+        }, 1000);
+    }
+
+    function cancelCountdown(showSuccess = false) {
+        if (state.countdownTimer) clearInterval(state.countdownTimer);
+        state.countdownActive = false;
+        DOM.countdownNumber.classList.remove('active');
+        DOM.refillOverlay.classList.remove('active');
+        if (showSuccess) { pulse(DOM.successCheckmark); pulse(DOM.successFlash); }
+    }
+
+    function showCountdownNumber(num) {
+        DOM.countdownNumber.textContent = num;
+        pulse(DOM.countdownNumber);
+        pulse(DOM.warningFlash);
+    }
+
+    function triggerDamage() {
+        if (state.damageStage >= 5) return;
+        state.damageStage++;
+        if (state.warpAppliedAtStage < state.damageStage) {
+            state.warping = Math.min(100, state.warping + TUNING.damage.warpIncrements[state.damageStage]);
+            state.warpAppliedAtStage = state.damageStage;
         }
+        state.statsFrozen = true;
+        if (tutorial.idleActive) hideIdleHint();
+        showDamagePopup();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // ZOOM (Pointer Events)
+    // ════════════════════════════════════════════════════════════════════════════
+    DOM.canvas.addEventListener('pointerup', e => {
+        if (state.popupVisible || state.infoVisible || tutorial.active || tutorial.idleActive) return;
+        e.preventDefault();
         
-        function updateUI() {
-            const isSeized = engine.damageStage >= 5, isOilCrit = engine.oilLevel < 10;
-            const isLubLow = engine.lubrication < 30, isFrictionHigh = engine.friction > 60, isWarpHigh = engine.warping > 30;
-            
-            // Check Oil (amber, solid) - below 25%
-            checkOilLight.classList.toggle('active', engine.oilLevel < 25);
-            
-            // Oil Pressure (red) - below 10%
-            oilPressureLight.classList.toggle('active', engine.oilLevel < 10);
-            
-            // Check Engine (amber, solid) - Stage 2 and beyond
-            checkEngineLight.classList.toggle('active', engine.damageStage >= 2);
-            
-            oilSliderFill.style.width = engine.oilLevel + '%';
-            oilSliderBall.style.left = engine.oilLevel + '%';
-            oilPercent.textContent = Math.round(engine.oilLevel);
-            oilSliderFill.classList.toggle('low', isOilCrit);
-            oilSliderBall.classList.toggle('low', isOilCrit);
-            oilPercentage.classList.toggle('low', isOilCrit);
-            oilSection.classList.toggle('warning', isOilCrit);
-            oilWarningIcon.style.display = isOilCrit ? 'inline' : 'none';
-            refillOilOverlay.classList.toggle('active', engine.countdownActive);
-            
-            const dLube = isSeized ? 0 : engine.lubrication, dFriction = isSeized ? 0 : engine.friction;
-            lubMeter.style.width = dLube + '%';
-            lubValue.textContent = Math.round(dLube) + '%';
-            lubMeter.classList.toggle('critical', isLubLow && !isSeized);
-            lubValue.classList.toggle('critical', isLubLow && !isSeized);
-            lubMeterContainer.classList.toggle('critical', isLubLow && !isSeized);
-            
-            frictionMeter.style.width = dFriction + '%';
-            frictionValue.textContent = Math.round(dFriction) + '%';
-            frictionMeter.classList.toggle('critical', isFrictionHigh && !isSeized);
-            frictionValue.classList.toggle('critical', isFrictionHigh && !isSeized);
-            frictionMeterContainer.classList.toggle('critical', isFrictionHigh && !isSeized);
-            
-            warpMeter.style.width = engine.warping + '%';
-            warpValue.textContent = Math.round(engine.warping) + '%';
-            warpMeter.classList.toggle('critical', isWarpHigh);
-            warpValue.classList.toggle('critical', isWarpHigh);
-            warpMeterContainer.classList.toggle('critical', isWarpHigh);
-            
-            const stage = damageStages[engine.damageStage];
-            damageStageEl.textContent = stage.name;
-            damageStageEl.className = 'hud-status-stage ' + stage.color;
-            statusText.textContent = stage.description;
-            hudStatus.classList.toggle('critical', engine.damageStage > 0);
-            
-            const problems = stageProblems[engine.damageStage];
-            if (problems.length === 0) hudProblems.classList.remove('visible');
-            else {
-                hudProblems.classList.add('visible');
-                problemsList.innerHTML = '';
-                problems.forEach(p => { const li = document.createElement('li'); li.innerHTML = `<span class="problem-x">✕</span> ${p}`; problemsList.appendChild(li); });
-            }
-            
-            conditionText.textContent = stageConditions[engine.damageStage];
-            hudCondition.classList.toggle('critical', engine.damageStage >= 3);
-            engineWrapper.classList.toggle('warning', engine.countdownActive || engine.damageStage >= 3);
-            
-            engineRPM.textContent = Math.round(engine.rpm);
-            engineRPM.classList.toggle('critical', engine.rpm < 2000);
-            if (engine.rpmReductionPercent > 0) { rpmReduction.textContent = `-${engine.rpmReductionPercent}%`; rpmReduction.classList.add('visible'); }
-            else rpmReduction.classList.remove('visible');
-            
-            updateStageProgressBar();
+        const rect = DOM.canvas.getBoundingClientRect();
+        const relX = (e.clientX - rect.left) / rect.width;
+        const relY = (e.clientY - rect.top) / rect.height;
+        
+        if (zoom.isZoomed) {
+            zoom.isZoomed = false;
+            zoom.targetLevel = TUNING.canvas.baseScale;
+            zoom.targetOffsetX = zoom.targetOffsetY = 0;
+            DOM.canvas.classList.remove('zoomed');
+        } else {
+            zoom.isZoomed = true;
+            zoom.targetLevel = TUNING.canvas.zoomedScale;
+            zoom.targetOffsetX = -(relX - 0.5) * 300;
+            zoom.targetOffsetY = -(relY - 0.5) * 300;
+            DOM.canvas.classList.add('zoomed');
         }
+    });
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // TUTORIAL
+    // ════════════════════════════════════════════════════════════════════════════
+    function startTutorial() {
+        tutorial.active = true;
+        tutorial.completed = false;
+        tutorial.step = 0;
+        DOM.tutorialOverlay.classList.add('active');
+        DOM.tutorialOverlay.classList.remove('idle-hint');
+        DOM.tutorialProgress.innerHTML = TUTORIAL_STEPS.map((_, i) => `<div class="tutorial-dot${i === 0 ? ' active' : ''}"></div>`).join('');
+        showTutorialStep(0);
+    }
+
+    function showTutorialStep(i) {
+        if (i >= TUTORIAL_STEPS.length) { endTutorial(); return; }
+        const step = TUTORIAL_STEPS[i];
+        const el = document.getElementById(step.target);
+        const rect = el.getBoundingClientRect();
         
-        // ==================== COUNTDOWN ====================
-        function startCountdown() {
-            engine.countdownActive = true; engine.countdownValue = 3;
-            if (idleHintActive) hideIdleHint();
-            showCountdownNumber(3);
-            engine.countdownTimer = setInterval(() => {
-                engine.countdownValue--;
-                if (engine.countdownValue > 0) showCountdownNumber(engine.countdownValue);
-                else { clearInterval(engine.countdownTimer); engine.countdownActive = false; refillOilOverlay.classList.remove('active'); triggerDamage(); }
-            }, 1000);
-        }
+        DOM.tutorialSpotlight.style.cssText = `left:${rect.left - 8}px;top:${rect.top - 8}px;width:${rect.width + 16}px;height:${rect.height + 16}px`;
         
-        function cancelCountdown(showSuccess = false) {
-            if (engine.countdownTimer) clearInterval(engine.countdownTimer);
-            engine.countdownActive = false;
-            countdownNumber.classList.remove('visible');
-            refillOilOverlay.classList.remove('active');
-            if (showSuccess) {
-                successCheckmark.classList.remove('visible'); void successCheckmark.offsetWidth; successCheckmark.classList.add('visible');
-                successFlash.classList.remove('active'); void successFlash.offsetWidth; successFlash.classList.add('active');
-            }
-        }
+        const arrows = { below: '▲', above: '▼', left: '▶', right: '◀' };
+        DOM.tutorialArrow.textContent = arrows[step.position];
+        DOM.tutorialArrowContainer.className = `tutorial-arrow-container position-${step.position}`;
         
-        function showCountdownNumber(num) {
-            countdownNumber.textContent = num;
-            countdownNumber.classList.remove('visible'); void countdownNumber.offsetWidth; countdownNumber.classList.add('visible');
-            warningFlash.classList.remove('active'); void warningFlash.offsetWidth; warningFlash.classList.add('active');
-        }
+        const x = step.position === 'left' ? rect.left - 8 : step.position === 'right' ? rect.right + 8 : rect.left + rect.width/2;
+        const y = step.position === 'above' ? rect.top - 8 : step.position === 'below' ? rect.bottom + 8 : rect.top + rect.height/2;
+        const transform = { below: 'translate(-50%,0)', above: 'translate(-50%,-100%)', left: 'translate(-100%,-50%)', right: 'translate(0,-50%)' }[step.position];
+        DOM.tutorialArrowContainer.style.cssText = `left:${x}px;top:${y}px;transform:${transform}`;
+        DOM.tutorialText.innerHTML = step.text + '<small>Tap to continue</small>';
         
-        function triggerDamage() {
-            if (engine.damageStage >= 5) return;
-            engine.damageStage++;
-            if (engine.warpAppliedAtStage < engine.damageStage) {
-                engine.warping = Math.min(100, engine.warping + warpIncrements[engine.damageStage]);
-                engine.warpAppliedAtStage = engine.damageStage;
-            }
-            engine.statsFrozen = true;
-            if (idleHintActive) hideIdleHint();
-            showDamagePopup();
-        }
-        
-        // ==================== RENDER ====================
-        function render() {
-            const rect = engineWrapper.getBoundingClientRect();
-            const dw = rect.width, dh = rect.height;
-            ctx.clearRect(0, 0, dw, dh);
-            ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, dw, dh);
-            ctx.save();
-            const scaleX = dw / CANVAS_WIDTH, scaleY = dh / CANVAS_HEIGHT;
-            const baseScale = Math.min(scaleX, scaleY) * zoom.baseScale;
-            const currentScale = (zoom.level / zoom.baseScale) * baseScale;
-            ctx.translate(dw / 2, dh / 2);
-            ctx.scale(currentScale, currentScale);
-            ctx.translate(-ENGINE_CENTER_X + zoom.offsetX, -ENGINE_CENTER_Y + zoom.offsetY);
-            
-            drawEngineBlock(ctx);
-            drawOilGalleries(ctx);
-            drawOilPan(ctx);
-            drawOilPumpAndPickup(ctx);
-            drawCrankshaft(ctx, engine.crankAngle);
-            cylinders.forEach(cyl => cyl.draw(ctx, engine));
-            drawParticles(ctx);
-            ctx.restore();
-        }
-        
-        function gameLoop() {
-            updateZoom(); updateEngine(); render();
-            requestAnimationFrame(gameLoop);
-        }
-        
-        // ==================== OIL SLIDER ====================
-        let isDragging = false;
-        function updateOilFromPosition(clientX) {
-            const rect = oilSliderTrack.getBoundingClientRect();
-            engine.oilLevel = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
-            resetIdleTimer();
-        }
-        
-        oilSliderTrack.addEventListener('mousedown', (e) => { isDragging = true; updateOilFromPosition(e.clientX); });
-        oilSliderBall.addEventListener('mousedown', (e) => { isDragging = true; e.preventDefault(); });
-        document.addEventListener('mousemove', (e) => { if (isDragging) updateOilFromPosition(e.clientX); });
-        document.addEventListener('mouseup', () => { isDragging = false; });
-        oilSliderTrack.addEventListener('touchstart', (e) => { isDragging = true; updateOilFromPosition(e.touches[0].clientX); });
-        oilSliderBall.addEventListener('touchstart', (e) => { isDragging = true; e.preventDefault(); });
-        document.addEventListener('touchmove', (e) => { if (isDragging) updateOilFromPosition(e.touches[0].clientX); });
-        document.addEventListener('touchend', () => { isDragging = false; });
-        
-        refillBtn.addEventListener('click', () => { engine.oilLevel = 100; resetIdleTimer(); });
-        resetBtn.addEventListener('click', () => {
-            engine.oilLevel = 100; engine.lubrication = 100; engine.friction = 0; engine.warping = 0;
-            engine.damageStage = 0; engine.warpAppliedAtStage = -1; engine.rpm = 3000;
-            engine.rpmReductionPercent = 0; engine.isRunning = true; engine.statsFrozen = false;
-            engine.damagePopupVisible = false; engine.infoPopupVisible = false; engine.graceActive = false;
-            engine.frictionParticles = []; engine.windageParticles = []; engine.drainbackParticles = [];
-            oilSystem.airBubbles = [];
-            cylinders.forEach(cyl => { cyl.angle = cyl.baseAngle; cyl.pistonWarpAngle = 0; });
-            cancelCountdown(false);
-            infoOverlay.classList.remove('visible');
-            refillOilOverlay.classList.remove('active');
-            resetIdleTimer();
+        DOM.tutorialProgress.querySelectorAll('.tutorial-dot').forEach((dot, j) => {
+            dot.classList.toggle('active', j === i);
+            dot.classList.toggle('completed', j < i);
         });
         
-        gameLoop();
+        if (tutorial.autoTimer) clearTimeout(tutorial.autoTimer);
+        tutorial.autoTimer = setTimeout(advanceTutorial, 5000);
+    }
+
+    function advanceTutorial() {
+        if (!tutorial.active) return;
+        if (++tutorial.step >= TUTORIAL_STEPS.length) endTutorial();
+        else showTutorialStep(tutorial.step);
+    }
+
+    function endTutorial() {
+        tutorial.active = false;
+        tutorial.completed = true;
+        DOM.tutorialOverlay.classList.remove('active');
+        if (tutorial.autoTimer) clearTimeout(tutorial.autoTimer);
+        resetIdleTimer();
+    }
+
+    function showIdleHint() {
+        if (tutorial.active || state.countdownActive || state.popupVisible || state.infoVisible) return;
+        tutorial.idleActive = true;
+        DOM.tutorialOverlay.classList.add('active', 'idle-hint');
+        const rect = DOM.oilSection.getBoundingClientRect();
+        DOM.tutorialSpotlight.style.cssText = `left:${rect.left - 8}px;top:${rect.top - 8}px;width:${rect.width + 16}px;height:${rect.height + 16}px`;
+        DOM.tutorialArrow.textContent = '▼';
+        DOM.tutorialArrowContainer.className = 'tutorial-arrow-container position-above';
+        DOM.tutorialArrowContainer.style.cssText = `left:${rect.left + rect.width/2}px;top:${rect.top - 8}px;transform:translate(-50%,-100%)`;
+        DOM.tutorialText.innerHTML = '<b>Move oil level slider</b> to affect the engine<small>Tap to dismiss</small>';
+    }
+
+    function hideIdleHint() { tutorial.idleActive = false; DOM.tutorialOverlay.classList.remove('active', 'idle-hint'); }
+
+    function resetIdleTimer() {
+        if (tutorial.idleTimer) clearTimeout(tutorial.idleTimer);
+        if (tutorial.idleActive) hideIdleHint();
+        if (tutorial.completed && !tutorial.active && !state.countdownActive && !state.popupVisible && !state.infoVisible)
+            tutorial.idleTimer = setTimeout(showIdleHint, 15000);
+    }
+
+    DOM.tutorialOverlay.addEventListener('pointerup', () => tutorial.idleActive ? hideIdleHint() : advanceTutorial());
+    DOM.tutorialArrowContainer.addEventListener('pointerup', e => { e.stopPropagation(); tutorial.idleActive ? hideIdleHint() : advanceTutorial(); });
+    ['pointerdown', 'pointermove', 'scroll'].forEach(e => document.addEventListener(e, resetIdleTimer));
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // OIL SLIDER (Pointer Events)
+    // ════════════════════════════════════════════════════════════════════════════
+    let dragging = false;
+    
+    function updateOil(clientX) {
+        const rect = DOM.oilTrack.getBoundingClientRect();
+        state.oilLevel = clamp(((clientX - rect.left) / rect.width) * 100, 0, 100);
+        resetIdleTimer();
+    }
+
+    DOM.oilTrack.addEventListener('pointerdown', e => { dragging = true; DOM.oilTrack.setPointerCapture(e.pointerId); updateOil(e.clientX); });
+    DOM.oilBall.addEventListener('pointerdown', e => { dragging = true; DOM.oilTrack.setPointerCapture(e.pointerId); e.preventDefault(); });
+    DOM.oilTrack.addEventListener('pointermove', e => { if (dragging) updateOil(e.clientX); });
+    DOM.oilTrack.addEventListener('pointerup', e => { dragging = false; DOM.oilTrack.releasePointerCapture(e.pointerId); });
+    DOM.oilTrack.addEventListener('pointercancel', e => { dragging = false; DOM.oilTrack.releasePointerCapture(e.pointerId); });
+
+    DOM.refillBtn.addEventListener('click', () => { state.oilLevel = 100; resetIdleTimer(); });
+    DOM.resetBtn.addEventListener('click', () => {
+        Object.assign(state, {
+            oilLevel: 100, lubrication: 100, friction: 0, warping: 0,
+            damageStage: 0, warpAppliedAtStage: -1, rpm: TUNING.damage.baseRpm,
+            isRunning: true, statsFrozen: false, popupVisible: false, infoVisible: false, graceActive: false,
+            particles: []
+        });
+        cylinders.forEach(c => c.pistonWarp = 0);
+        cancelCountdown(false);
+        DOM.infoOverlay.classList.remove('visible');
+        DOM.refillOverlay.classList.remove('active');
+        resetIdleTimer();
+    });
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // ENGINE UPDATE
+    // ════════════════════════════════════════════════════════════════════════════
+    function updateEngine() {
+        if (state.damageStage >= 5) {
+            state.isRunning = false;
+            state.rpm = state.lubrication = state.friction = 0;
+        }
+        
+        const rpmReduction = state.damageStage >= 5 ? 100 : Math.round((state.damageStage * TUNING.damage.rpmLossPerStage) / TUNING.damage.baseRpm * 100);
+        
+        if (state.isRunning) {
+            state.crankAngle = (state.crankAngle + 12 * state.rpm / TUNING.damage.baseRpm) % 720;
+            cylinders.forEach(c => c.update(state.crankAngle, rpmReduction));
+        }
+        
+        if (state.statsFrozen || state.damageStage >= 5) { UI.updateAll(); return; }
+        
+        const dmgMult = 1 + state.damageStage * 0.3;
+        const { oilLevel: oil, lubrication: lube } = state;
+        
+        state.lubrication = oil >= TUNING.oil.critical
+            ? Math.min(100, lube + (100 - lube) * 0.03)
+            : Math.max(0, lube - ((20 + (TUNING.oil.critical - oil) / TUNING.oil.critical * 13.3) / 60) * dmgMult);
+        
+        state.friction = state.lubrication < 50
+            ? Math.min(100, state.friction + ((1 + (50 - state.lubrication) / 50 * 32) / 60) * dmgMult * (1 + state.rpm / TUNING.damage.baseRpm * state.damageStage * 0.1))
+            : Math.max(0, state.friction - state.friction * (oil >= 50 ? 0.04 : oil >= TUNING.oil.critical ? 0.025 : 0.01));
+        
+        if (state.isRunning) {
+            const targetRPM = TUNING.damage.baseRpm - state.damageStage * TUNING.damage.rpmLossPerStage - (state.friction > 80 ? 500 : 0);
+            state.rpm = Math.max(0, state.rpm + (targetRPM - state.rpm) * 0.05);
+        }
+        
+        const shouldCountdown = state.friction > TUNING.friction.countdownStart && state.damageStage < 5 && !state.countdownActive && !state.popupVisible && !state.infoVisible && !state.graceActive;
+        if (shouldCountdown) { if (tutorial.idleActive) hideIdleHint(); startCountdown(); }
+        if (state.countdownActive && state.friction < TUNING.friction.countdownCancel) cancelCountdown(true);
+        
+        UI.updateAll();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // RENDER
+    // ════════════════════════════════════════════════════════════════════════════
+    function render() {
+        const rect = DOM.wrapper.getBoundingClientRect();
+        const { width: cw, height: ch, centerX: cx, centerY: cy, baseScale } = TUNING.canvas;
+        
+        ctx.clearRect(0, 0, rect.width, rect.height);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, rect.width, rect.height);
+        
+        zoom.level = lerp(zoom.level, zoom.targetLevel, 0.12);
+        zoom.offsetX = lerp(zoom.offsetX, zoom.targetOffsetX, 0.12);
+        zoom.offsetY = lerp(zoom.offsetY, zoom.targetOffsetY, 0.12);
+        
+        ctx.save();
+        const scale = Math.min(rect.width / cw, rect.height / ch) * baseScale * (zoom.level / baseScale);
+        ctx.translate(rect.width / 2, rect.height / 2);
+        ctx.scale(scale, scale);
+        ctx.translate(-cx + zoom.offsetX, -cy + zoom.offsetY);
+        
+        Draw.engineBlock(ctx);
+        Draw.galleries(ctx);
+        Draw.oilPan(ctx);
+        Draw.pumpAndPickup(ctx);
+        Draw.crankshaft(ctx, state.crankAngle);
+        cylinders.forEach(c => c.draw(ctx));
+        Draw.particles(ctx);
+        
+        ctx.restore();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // GAME LOOP & INIT
+    // ════════════════════════════════════════════════════════════════════════════
+    function gameLoop() {
+        updateEngine();
+        render();
+        requestAnimationFrame(gameLoop);
+    }
+
+    window.addEventListener('load', () => {
+        setTimeout(startTutorial, 500);
+        UI.updateProgressBar();
+    });
+
+    gameLoop();
     </script>
 </body>
 </html>
