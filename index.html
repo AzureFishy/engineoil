@@ -57,43 +57,87 @@
         }
         #engineCanvas.zoomed { cursor: zoom-out; }
 
-        /* ==================== WARNING LIGHTS ==================== */
+        /* ==================== WARNING LIGHTS (SVG Icons) ==================== */
         .warning-lights-top {
             position: absolute;
             top: 10px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 15px;
+            gap: 20px;
             z-index: 10;
         }
 
         .warning-light {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 5px;
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #999;
-            opacity: 0.05;
-            transition: all 0.3s ease;
-        }
-        .warning-light .indicator {
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            background: #ddd;
-            border: 1px solid #bbb;
-            transition: all 0.3s ease;
+            gap: 2px;
+            opacity: 0.08;
+            transition: opacity 0.3s ease;
         }
         .warning-light.active { opacity: 1; }
-        .warning-light.amber.active { color: #cc8800; }
-        .warning-light.amber.active .indicator { background: #ffaa00; border-color: #cc8800; box-shadow: 0 0 10px rgba(255, 170, 0, 0.8); }
-        .warning-light.red.active { color: #cc0000; }
-        .warning-light.red.active .indicator { background: #cc0000; border-color: #aa0000; box-shadow: 0 0 10px rgba(204, 0, 0, 0.8); /* animation: lightPulse 0.8s infinite; */ }
 
-        @keyframes lightPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } } /* Available but not used */
+        .warning-light .icon-container {
+            position: relative;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .warning-light .icon {
+            width: 28px;
+            height: 28px;
+        }
+        .warning-light .label {
+            font-size: 6px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        /* Check Oil - Amber */
+        .warning-light.check-oil .icon .oil-can-body { stroke: #666; }
+        .warning-light.check-oil .icon .oil-can-drop { fill: #666; }
+        .warning-light.check-oil .label { color: #666; }
+        .warning-light.check-oil.active .icon .oil-can-body { stroke: #ff9900; }
+        .warning-light.check-oil.active .icon .oil-can-drop { fill: #ff9900; }
+        .warning-light.check-oil.active .label { color: #ff9900; }
+
+        /* Oil Pressure - Red */
+        .warning-light.oil-pressure .icon .oil-can-body { stroke: #666; }
+        .warning-light.oil-pressure .icon .oil-can-drop { fill: #666; }
+        .warning-light.oil-pressure .label { color: #666; }
+        .warning-light.oil-pressure.active .icon .oil-can-body { stroke: #cc0000; }
+        .warning-light.oil-pressure.active .icon .oil-can-drop { fill: #cc0000; }
+        .warning-light.oil-pressure.active .label { color: #cc0000; }
+
+        /* Check Engine - Amber */
+        .warning-light.check-engine .icon .engine-body { stroke: #666; }
+        .warning-light.check-engine .label { color: #666; }
+        .warning-light.check-engine.active .icon .engine-body { stroke: #ff9900; }
+        .warning-light.check-engine.active .label { color: #ff9900; }
+        
+        /* Pending state - subtle flashing at ~10% opacity */
+        .warning-light.pending {
+            animation: pendingFlash 1.5s ease-in-out infinite;
+        }
+        .warning-light.pending.check-oil .icon .oil-can-body { stroke: #ff9900; }
+        .warning-light.pending.check-oil .icon .oil-can-drop { fill: #ff9900; }
+        .warning-light.pending.check-oil .label { color: #ff9900; }
+        .warning-light.pending.oil-pressure .icon .oil-can-body { stroke: #cc0000; }
+        .warning-light.pending.oil-pressure .icon .oil-can-drop { fill: #cc0000; }
+        .warning-light.pending.oil-pressure .label { color: #cc0000; }
+        .warning-light.pending.check-engine .icon .engine-body { stroke: #ff9900; }
+        .warning-light.pending.check-engine .label { color: #ff9900; }
+
+        @keyframes pendingFlash {
+            0%, 100% { opacity: 0.06; }
+            50% { opacity: 0.15; }
+        }
+
 
         /* ==================== HUD PANELS ==================== */
         .hud-left-panel {
@@ -127,6 +171,18 @@
         .hud-box:hover { background: #f8f8f8; }
         .hud-box.critical { border-color: #cc0000; background: #fff5f5; }
         .hud-box.critical:hover { background: #fff0f0; }
+        
+        /* Unified damage stage styling for left panel boxes */
+        .hud-left-panel.damage-stage-1 .hud-box { border-color: #cc0000; }
+        .hud-left-panel.damage-stage-2 .hud-box { border-color: #cc0000; background: rgba(204, 0, 0, 0.03); }
+        .hud-left-panel.damage-stage-3 .hud-box { border-color: #cc0000; background: rgba(204, 0, 0, 0.06); }
+        .hud-left-panel.damage-stage-4 .hud-box { border-color: #cc0000; background: rgba(204, 0, 0, 0.10); }
+        .hud-left-panel.damage-stage-5 .hud-box { border-color: #cc0000; background: rgba(204, 0, 0, 0.15); }
+        .hud-left-panel.damage-stage-1 .hud-box:hover,
+        .hud-left-panel.damage-stage-2 .hud-box:hover,
+        .hud-left-panel.damage-stage-3 .hud-box:hover,
+        .hud-left-panel.damage-stage-4 .hud-box:hover,
+        .hud-left-panel.damage-stage-5 .hud-box:hover { background: rgba(204, 0, 0, 0.08); }
 
         .hud-label {
             font-size: 7px;
@@ -372,6 +428,53 @@
             20% { transform: scale(1.2); opacity: 1; }
             40%, 80% { transform: scale(1); opacity: 1; }
             100% { transform: scale(0.8); opacity: 0; }
+        }
+
+        /* Friction hint text - shows during countdown */
+        .friction-hint {
+            position: absolute;
+            top: 60%;
+            font-size: clamp(16px, 5vw, 28px);
+            font-weight: 700;
+            color: #cc0000;
+            opacity: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff,
+                         -2px 0 0 #fff, 2px 0 0 #fff, 0 -2px 0 #fff, 0 2px 0 #fff,
+                         0 0 20px rgba(204, 0, 0, 0.4);
+            pointer-events: none;
+        }
+        .friction-hint.active {
+            opacity: 1;
+            animation: frictionSway 2s ease-in-out infinite;
+        }
+        @keyframes frictionSway {
+            0%, 100% { transform: translateX(-15px); }
+            50% { transform: translateX(15px); }
+        }
+
+        /* Friction success text - shows with checkmark */
+        .friction-success {
+            position: absolute;
+            top: 62%;
+            font-size: clamp(14px, 4vw, 22px);
+            font-weight: 700;
+            color: #00aa44;
+            opacity: 0;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff,
+                         -2px 0 0 #fff, 2px 0 0 #fff, 0 -2px 0 #fff, 0 2px 0 #fff,
+                         0 0 20px rgba(0, 170, 68, 0.4);
+            pointer-events: none;
+        }
+        .friction-success.active { animation: frictionSuccessPop 1.2s ease-out forwards; }
+        @keyframes frictionSuccessPop {
+            0% { opacity: 0; transform: scale(0.8); }
+            20% { opacity: 1; transform: scale(1.05); }
+            40%, 80% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.9); }
         }
 
         .flash-overlay {
@@ -655,6 +758,56 @@
         .btn:active { background: #555; }
         .btn-icon { font-size: clamp(16px, 4vw, 22px); }
 
+        /* ==================== FOOTER ==================== */
+        .site-footer {
+            margin-top: 15px;
+            padding: 0 10px 10px 10px;
+        }
+        .footer-divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #ccc 20%, #ccc 80%, transparent);
+            margin-bottom: 12px;
+        }
+        .footer-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            font-size: 11px;
+            color: #999;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .footer-copyright {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .footer-separator {
+            color: #ccc;
+            margin: 0 2px;
+        }
+        .footer-author {
+            color: #666;
+        }
+        .footer-link {
+            color: #888;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        .footer-link:hover {
+            color: #555;
+            text-decoration: underline;
+        }
+        .footer-version {
+            font-family: 'SF Mono', 'Monaco', 'Consolas', 'Liberation Mono', monospace;
+            font-size: 10px;
+            color: #aaa;
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
         /* ==================== RESPONSIVE ==================== */
         @media (min-width: 601px), (orientation: landscape) {
             .container { padding-left: 5%; padding-right: 5%; }
@@ -666,15 +819,17 @@
             .hud-left-panel { left: 4px; width: clamp(80px, 22vw, 110px); }
             .hud-right-panel { right: 4px; width: clamp(70px, 20vw, 100px); }
             .tutorial-text { max-width: 250px; }
-            .warning-lights-top { gap: 8px; }
-            .warning-light { font-size: 8px; gap: 3px; }
-            .warning-light .indicator { width: 8px; height: 8px; }
+            .warning-lights-top { gap: 12px; }
+            .warning-light .icon-container { width: 22px; height: 22px; }
+            .warning-light .icon { width: 22px; height: 22px; }
+            .warning-light .label { font-size: 5px; }
         }
 
         @media (max-width: 500px) {
-            .warning-lights-top { gap: 6px; }
-            .warning-light { font-size: 7px; }
-            .warning-light .indicator { width: 7px; height: 7px; }
+            .warning-lights-top { gap: 10px; }
+            .warning-light .icon-container { width: 20px; height: 20px; }
+            .warning-light .icon { width: 20px; height: 20px; }
+            .warning-light .label { font-size: 5px; }
             .hud-box { padding: 4px 6px; }
             .hud-status-stage { font-size: 9px; }
             .hud-problems-list li { font-size: 7px; }
@@ -703,20 +858,56 @@
 <body>
     <div class="container">
         <header>
-            <h1>V6 Engine Lubrication Simulation</h1>
-            <p class="subtitle">Interactive demonstration of engine operation and oil system failure</p>
+            <h1>Engine Oil Simulation</h1>
+            <p class="subtitle">Interactive demonstration of a V6 engine operation and oil system failure</p>
         </header>
         
         <div class="engine-canvas-wrapper" id="engineWrapper">
             <canvas id="engineCanvas"></canvas>
             
             <div class="warning-lights-top">
-                <div class="warning-light amber" data-light="checkOil"><span class="indicator"></span><span>Check Oil</span></div>
-                <div class="warning-light red" data-light="oilPressure"><span class="indicator"></span><span>Oil Pressure</span></div>
-                <div class="warning-light amber" data-light="checkEngine"><span class="indicator"></span><span>Check Engine</span></div>
+                <!-- Check Oil - Amber oil can -->
+                <div class="warning-light check-oil" data-light="checkOil">
+                    <div class="icon-container">
+                        <svg class="icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <g class="oil-can-body" fill="none" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M 16 42 L 10 70 Q 10 78, 20 78 L 50 78 Q 56 78, 56 72 L 56 56 L 72 44 L 72 38 L 56 50 L 56 42 Q 56 36, 50 36 L 42 36 L 42 26 Q 42 20, 34 20 L 24 20 Q 18 20, 18 26 L 18 36 Q 10 36, 10 42 L 16 42"/>
+                            </g>
+                            <path class="oil-can-drop" d="M 80 48 L 87 68 Q 87 76, 80 76 Q 73 76, 73 68 L 80 48 Z"/>
+                        </svg>
+                    </div>
+                    <span class="label">Check Oil</span>
+                </div>
+                
+                <!-- Oil Pressure - Red oil can -->
+                <div class="warning-light oil-pressure" data-light="oilPressure">
+                    <div class="icon-container">
+                        <svg class="icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <g class="oil-can-body" fill="none" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M 16 42 L 10 70 Q 10 78, 20 78 L 50 78 Q 56 78, 56 72 L 56 56 L 72 44 L 72 38 L 56 50 L 56 42 Q 56 36, 50 36 L 42 36 L 42 26 Q 42 20, 34 20 L 24 20 Q 18 20, 18 26 L 18 36 Q 10 36, 10 42 L 16 42"/>
+                            </g>
+                            <path class="oil-can-drop" d="M 80 48 L 87 68 Q 87 76, 80 76 Q 73 76, 73 68 L 80 48 Z"/>
+                        </svg>
+                    </div>
+                    <span class="label">Oil Pressure</span>
+                </div>
+                
+                <!-- Check Engine - Amber engine -->
+                <div class="warning-light check-engine" data-light="checkEngine">
+                    <div class="icon-container">
+                        <svg class="icon" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+                            <g class="engine-body" fill="none" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M 20 28 L 20 60 Q 20 66, 26 66 L 74 66 Q 80 66, 80 60 L 80 28 Q 80 22, 74 22 L 62 22 L 62 14 Q 62 10, 58 10 L 42 10 Q 38 10, 38 14 L 38 22 L 26 22 Q 20 22, 20 28"/>
+                                <path d="M 20 32 L 14 32 L 14 38 L 8 38 L 8 52 L 14 52 L 14 58 L 20 58"/>
+                                <path d="M 80 34 L 84 34 Q 92 34, 92 44 L 92 54 Q 92 64, 84 64 L 80 64"/>
+                            </g>
+                        </svg>
+                    </div>
+                    <span class="label">Check</span>
+                </div>
             </div>
             
-            <div class="hud-left-panel">
+            <div class="hud-left-panel" id="hudLeftPanel">
                 <div class="hud-box hud-status" data-info="status">
                     <div class="hud-label">Eng. Status</div>
                     <div class="hud-status-stage" id="damageStage">PERFECT</div>
@@ -774,7 +965,9 @@
             
             <div class="overlay-container">
                 <div class="countdown-number" id="countdownNumber">3</div>
+                <div class="friction-hint" id="frictionHint">Reduce Friction</div>
                 <div class="success-checkmark" id="successCheckmark">✓</div>
+                <div class="friction-success" id="frictionSuccess">Friction reduced!</div>
             </div>
             <div class="flash-overlay warning" id="warningFlash"></div>
             <div class="flash-overlay success" id="successFlash"></div>
@@ -823,6 +1016,17 @@
                 <button class="btn" id="resetBtn"><span class="btn-icon">⚙️</span><span>Reset</span></button>
             </div>
         </div>
+        
+        <footer class="site-footer">
+            <div class="footer-divider"></div>
+            <div class="footer-content">
+                <span class="footer-copyright">© 2026 <span class="footer-author">Aaron Harris</span></span>
+                <span class="footer-separator">|</span>
+                <a href="https://opensource.org/licenses/MIT" class="footer-link" target="_blank" rel="noopener">MIT License</a>
+                <span class="footer-separator">|</span>
+                <span class="footer-version">v0.35</span>
+            </div>
+        </footer>
     </div>
     
     <div class="tutorial-overlay" id="tutorialOverlay">
@@ -911,6 +1115,7 @@
         oilPercentage: document.getElementById('oilPercentage'),
         oilWarningIcon: document.getElementById('oilWarningIcon'),
         refillOverlay: document.getElementById('refillOverlay'),
+        hudLeftPanel: document.getElementById('hudLeftPanel'),
         damageStage: document.getElementById('damageStage'),
         statusText: document.getElementById('statusText'),
         hudProblems: document.getElementById('hudProblems'),
@@ -919,7 +1124,9 @@
         rpmValue: document.getElementById('rpmValue'),
         rpmReduction: document.getElementById('rpmReduction'),
         countdownNumber: document.getElementById('countdownNumber'),
+        frictionHint: document.getElementById('frictionHint'),
         successCheckmark: document.getElementById('successCheckmark'),
+        frictionSuccess: document.getElementById('frictionSuccess'),
         warningFlash: document.getElementById('warningFlash'),
         successFlash: document.getElementById('successFlash'),
         infoOverlay: document.getElementById('infoOverlay'),
@@ -958,6 +1165,21 @@
 
     const zoom = { level: 1, targetLevel: 1, offsetX: 0, offsetY: 0, targetOffsetX: 0, targetOffsetY: 0, isZoomed: false };
     const tutorial = { active: false, completed: false, step: 0, autoTimer: null, idleTimer: null, idleActive: false };
+    
+    // Warning light delay system - each light has independent delay tracking
+    const lightDelays = {
+        checkOil: { delay: 0, startTime: 0, state: 'off' },      // state: 'off', 'pending', 'active'
+        oilPressure: { delay: 0, startTime: 0, state: 'off' },
+        checkEngine: { delay: 0, startTime: 0, state: 'off' }
+    };
+    
+    // Roll a new random delay (1-6 seconds) for a light
+    function rollLightDelay(lightKey) {
+        lightDelays[lightKey].delay = 1000 + Math.random() * 5000; // 1000-6000ms
+    }
+    
+    // Initialize delays for all lights
+    Object.keys(lightDelays).forEach(rollLightDelay);
 
     // ════════════════════════════════════════════════════════════════════════════
     // HELPERS
@@ -1443,7 +1665,42 @@
         },
 
         updateLights() {
-            DOM.lights.forEach(el => el.classList.toggle('active', LIGHTS_CONFIG[el.dataset.light]()));
+            const now = Date.now();
+            
+            DOM.lights.forEach(el => {
+                const lightKey = el.dataset.light;
+                const shouldBeActive = LIGHTS_CONFIG[lightKey]();
+                const lightState = lightDelays[lightKey];
+                
+                if (shouldBeActive) {
+                    // Light condition is met
+                    if (lightState.state === 'off') {
+                        // Just triggered - start pending state
+                        lightState.state = 'pending';
+                        lightState.startTime = now;
+                    } else if (lightState.state === 'pending') {
+                        // Check if delay has elapsed
+                        if (now - lightState.startTime >= lightState.delay) {
+                            lightState.state = 'active';
+                        }
+                    }
+                    // 'active' state stays active
+                } else {
+                    // Condition no longer met - turn off and roll new delay
+                    if (lightState.state !== 'off') {
+                        lightState.state = 'off';
+                        rollLightDelay(lightKey); // New random delay for next time
+                    }
+                }
+                
+                // Apply CSS classes based on state
+                el.classList.remove('active', 'pending');
+                if (lightState.state === 'active') {
+                    el.classList.add('active');
+                } else if (lightState.state === 'pending') {
+                    el.classList.add('pending');
+                }
+            });
         },
 
         updateOilSlider() {
@@ -1467,6 +1724,11 @@
             DOM.statusText.textContent = s.desc;
             DOM.damageStage.parentElement.classList.toggle('critical', state.damageStage > 0);
             
+            // Update left panel damage stage styling
+            for (let i = 0; i <= 5; i++) {
+                DOM.hudLeftPanel.classList.toggle('damage-stage-' + i, state.damageStage === i && i > 0);
+            }
+            
             DOM.hudProblems.classList.toggle('visible', s.problems.length > 0);
             DOM.problemsList.innerHTML = s.problems.map(p => `<li><span class="problem-x">✕</span> ${p}</li>`).join('');
             
@@ -1487,7 +1749,7 @@
             DOM.stageItems.forEach((item, i) => {
                 const isCurrent = i === state.damageStage;
                 const isDamaged = i > 0 && i <= state.damageStage;
-                const isNominalPast = i === 0 && state.damageStage >= 2;
+                const isNominalPast = i === 0 && state.damageStage >= 1;
                 item.classList.toggle('current', isCurrent);
                 item.classList.toggle('damaged', isDamaged);
                 item.classList.toggle('nominal-past', isNominalPast);
@@ -1567,6 +1829,7 @@
         state.countdownActive = true;
         state.countdownValue = 3;
         if (tutorial.idleActive) hideIdleHint();
+        DOM.frictionHint.classList.add('active');  // Show swaying "Reduce Friction" text
         showCountdownNumber(3);
         state.countdownTimer = setInterval(() => {
             if (--state.countdownValue > 0) {
@@ -1574,6 +1837,7 @@
             } else {
                 clearInterval(state.countdownTimer);
                 state.countdownActive = false;
+                DOM.frictionHint.classList.remove('active');  // Hide hint when damage triggers
                 DOM.refillOverlay.classList.remove('active');
                 triggerDamage();
             }
@@ -1584,8 +1848,13 @@
         if (state.countdownTimer) clearInterval(state.countdownTimer);
         state.countdownActive = false;
         DOM.countdownNumber.classList.remove('active');
+        DOM.frictionHint.classList.remove('active');  // Hide hint
         DOM.refillOverlay.classList.remove('active');
-        if (showSuccess) { pulse(DOM.successCheckmark); pulse(DOM.successFlash); }
+        if (showSuccess) { 
+            pulse(DOM.successCheckmark); 
+            pulse(DOM.frictionSuccess);  // Show "Friction reduced!" text
+            pulse(DOM.successFlash); 
+        }
     }
 
     function showCountdownNumber(num) {
@@ -1739,6 +2008,16 @@
         cancelCountdown(false);
         DOM.infoOverlay.classList.remove('visible');
         DOM.refillOverlay.classList.remove('active');
+        DOM.frictionHint.classList.remove('active');
+        DOM.frictionSuccess.classList.remove('active');
+        // Reset left panel damage stage styling
+        for (let i = 1; i <= 5; i++) DOM.hudLeftPanel.classList.remove('damage-stage-' + i);
+        // Reset warning light delays
+        Object.keys(lightDelays).forEach(key => {
+            lightDelays[key].state = 'off';
+            rollLightDelay(key);
+        });
+        DOM.lights.forEach(el => el.classList.remove('active', 'pending'));
         resetIdleTimer();
     });
 
